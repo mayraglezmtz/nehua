@@ -1,0 +1,21 @@
+name: nehua-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Node.js for Next.js application
+  - nodejs>=18.0.0
+  
+  # Python for potential backend analysis tools
+  - python>=3.9
+  - pip
+  
+  # Development tools
+  - git
+  
+  # Optional: Python packages for code analysis
+  - pip:
+    - ast-grep  # For advanced AST parsing if needed
+    - tree-sitter  # For language parsing
+    - gitpython  # For git operations
+    - pyyaml  # For parsing config files

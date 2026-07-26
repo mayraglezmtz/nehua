@@ -1,0 +1,170 @@
+{
+  "project": {
+    "name": "Nehua",
+    "description": "Autonomous Software Architecture Agent",
+    "version": "1.0.0-mvp"
+  },
+  "frameworks": {
+    "django": {
+      "name": "Django",
+      "type": "backend",
+      "key_files": ["settings.py", "urls.py", "models.py", "views.py", "requirements.txt", "manage.py"],
+      "structure_patterns": ["*/settings/", "*/migrations/", "*/static/", "*/templates/"],
+      "dependency_files": ["requirements.txt", "Pipfile", "pyproject.toml"]
+    },
+    "fastapi": {
+      "name": "FastAPI",
+      "type": "backend", 
+      "key_files": ["main.py", "requirements.txt", "pyproject.toml"],
+      "structure_patterns": ["*/routers/", "*/models/", "*/schemas/", "*/dependencies/"],
+      "dependency_files": ["requirements.txt", "Pipfile", "pyproject.toml"]
+    },
+    "react": {
+      "name": "React",
+      "type": "frontend",
+      "key_files": ["package.json", "src/App.js", "src/App.tsx", "public/index.html"],
+      "structure_patterns": ["src/components/", "src/pages/", "src/hooks/", "src/utils/"],
+      "dependency_files": ["package.json", "yarn.lock", "package-lock.json"]
+    },
+    "nextjs": {
+      "name": "Next.js",
+      "type": "frontend",
+      "key_files": ["next.config.js", "next.config.mjs", "package.json"],
+      "structure_patterns": ["pages/", "app/", "components/", "lib/", "public/"],
+      "dependency_files": ["package.json", "yarn.lock", "package-lock.json"]
+    }
+  },
+  "node_types": {
+    "frontend": {
+      "icon": "monitor",
+      "color": "#00DDFA",
+      "description": "User interface components and client-side logic"
+    },
+    "backend": {
+      "icon": "server",
+      "color": "#FA0080", 
+      "description": "Server-side logic, APIs, and business rules"
+    },
+    "database": {
+      "icon": "database",
+      "color": "#FADD00",
+      "description": "Data storage and persistence layer"
+    },
+    "cache": {
+      "icon": "zap",
+      "color": "#A59837",
+      "description": "Caching layer for performance optimization"
+    },
+    "queue": {
+      "icon": "list",
+      "color": "#7A3D5D",
+      "description": "Message queues and async task processing"
+    },
+    "storage": {
+      "icon": "archive",
+      "color": "#3D737A",
+      "description": "File storage and static assets"
+    },
+    "authentication": {
+      "icon": "lock",
+      "color": "#FA0080",
+      "description": "Authentication and authorization services"
+    },
+    "cloud_service": {
+      "icon": "cloud",
+      "color": "#00DDFA",
+      "description": "External cloud services and APIs"
+    },
+    "ai_service": {
+      "icon": "brain",
+      "color": "#FADD00",
+      "description": "AI/ML services and providers"
+    },
+    "external_api": {
+      "icon": "globe",
+      "color": "#A59837",
+      "description": "Third-party APIs and integrations"
+    },
+    "infrastructure": {
+      "icon": "layers",
+      "color": "#7A3D5D", 
+      "description": "Infrastructure and deployment configuration"
+    },
+    "monitoring": {
+      "icon": "activity",
+      "color": "#3D737A",
+      "description": "Monitoring, logging, and observability"
+    }
+  },
+  "health_score": {
+    "categories": {
+      "dependencies": {
+        "weight": 25,
+        "description": "Package versions, security vulnerabilities, and dependency health"
+      },
+      "architecture": {
+        "weight": 25,
+        "description": "Code organization, separation of concerns, and architectural patterns"
+      },
+      "code_quality": {
+        "weight": 25,
+        "description": "File structure, naming conventions, and maintainability"
+      },
+      "performance": {
+        "weight": 25,
+        "description": "Bundle size, async patterns, and optimization opportunities"
+      }
+    },
+    "thresholds": {
+      "excellent": 90,
+      "good": 75,
+      "fair": 60,
+      "poor": 40
+    }
+  },
+  "ui": {
+    "theme": {
+      "background": "#FFFFFF",
+      "glass_opacity": 0.1,
+      "blur_strength": "blur-md",
+      "border_opacity": 0.2
+    },
+    "colors": {
+      "primary": "#FA0080",
+      "secondary": "#00DDFA", 
+      "accent": "#FADD00",
+      "neutral_1": "#A59837",
+      "neutral_2": "#7A3D5D",
+      "neutral_3": "#3D737A"
+    },
+    "animations": {
+      "node_hover_scale": 1.05,
+      "transition_duration": "300ms",
+      "path_highlight_duration": "500ms"
+    }
+  },
+  "analysis": {
+    "detail_level": "basic-intermediate",
+    "risk_categories": ["security", "performance", "maintainability", "scalability", "technical_debt"],
+    "report_format": "friendly_professional",
+    "max_files_to_analyze": 100,
+    "supported_extensions": [".py", ".js", ".jsx", ".ts", ".tsx", ".json", ".md", ".yml", ".yaml", ".toml", ".txt"]
+  },
+  "github": {
+    "scope": "public_repos",
+    "rate_limit_buffer": 10,
+    "max_repo_size_mb": 100
+  },
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-pro",
+    "max_tokens": 4096,
+    "temperature": 0.3,
+    "prompts": {
+      "architecture_analysis": "You are a senior software architect analyzing a codebase. Provide a clear, basic-to-intermediate level explanation of the architecture, identify main components, their relationships, and overall design patterns. Be friendly but professional.",
+      "risk_assessment": "Analyze this codebase for potential risks including security vulnerabilities, performance bottlenecks, maintainability issues, scalability concerns, and technical debt. Provide actionable insights in a friendly but professional tone.",
+      "component_explanation": "Explain the purpose and functionality of this code component in basic-to-intermediate detail. Focus on what it does, how it fits into the overall architecture, and its key responsibilities. Keep the tone friendly but professional.",
+      "health_score_reasoning": "Evaluate this codebase across four dimensions: dependencies (25%), architecture (25%), code quality (25%), and performance (25%). Provide a score from 0-100 and justify your reasoning in a friendly, professional manner."
+    }
+  }
+}
