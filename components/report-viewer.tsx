@@ -83,10 +83,12 @@ export function ReportViewer({ analysisResult, isOpen, onClose }: ReportViewerPr
 
       const result = await response.json()
       if (result.success) {
-        // Create download
-        const blob = new Blob([result.data.content], { 
-          type: result.metadata.contentType 
-        })
+        // Create download - binary formats (PDF) come back base64-encoded
+        const blob = result.data.encoding === 'base64'
+          ? new Blob([Uint8Array.from(atob(result.data.content), c => c.charCodeAt(0))], {
+              type: result.metadata.contentType
+            })
+          : new Blob([result.data.content], { type: result.metadata.contentType })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url

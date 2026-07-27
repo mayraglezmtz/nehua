@@ -1,4 +1,7 @@
 import { Repository, FileAnalysis, FrameworkDetection, ArchitectureNode, ArchitectureEdge, NodeType } from '@/types'
+import { FastAPIAnalyzer } from './analyzers/fastapi'
+import { ReactAnalyzer } from './analyzers/react'
+import { NextJSAnalyzer } from './analyzers/nextjs'
 
 export interface AnalysisContext {
   repository: Repository
@@ -27,11 +30,9 @@ export class StaticAnalysisEngine {
   }
 
   private registerAnalyzers() {
-    // Import and register framework-specific analyzers
-    // Note: These will be imported dynamically to avoid circular dependencies
     this.analyzers.set('django', new DjangoAnalyzer())
-    this.analyzers.set('fastapi', new (require('./analyzers/fastapi').FastAPIAnalyzer)())
-    this.analyzers.set('react', new (require('./analyzers/react').ReactAnalyzer)())
+    this.analyzers.set('fastapi', new FastAPIAnalyzer())
+    this.analyzers.set('react', new ReactAnalyzer())
     this.analyzers.set('nextjs', new NextJSAnalyzer())
   }
 
@@ -261,27 +262,44 @@ class DjangoAnalyzer implements FrameworkAnalyzer {
     return { files, nodes, edges, dependencies, risks }
   }
 
-  private async fetchDjangoFiles(context: AnalysisContext): Promise<FileAnalysis[]> {
-    const keyFiles = ['settings.py', 'urls.py', 'models.py', 'views.py', 'requirements.txt']
+  private async fetchDjangoFiles(
+    context: AnalysisContext
+  ): Promise<FileAnalysis[]> {
+    const structure = await this.fetchRepositoryStructure(context)
+
+    const interestingNames = [
+      'settings.py',
+      'urls.py',
+      'models.py',
+      'views.py',
+      'requirements.txt',
+      'manage.py',
+    ]
+
+    const matchingPaths = structure.filter(path =>
+      interestingNames.some(name => path.endsWith(name))
+    )
+
     const files: FileAnalysis[] = []
 
-    for (const fileName of keyFiles) {
+    for (const path of matchingPaths.slice(0, 30)) {
       try {
-        const fileContent = await this.fetchFileContent(context, fileName)
-        if (fileContent) {
-          files.push({
-            path: fileName,
-            type: this.getFileType(fileName),
-            language: 'Python',
-            size: fileContent.length,
-            lines_of_code: fileContent.split('\n').length,
-            imports: this.extractImports(fileContent),
-            exports: this.extractExports(fileContent),
-            dependencies: []
-          })
-        }
+        const fileContent = await this.fetchFileContent(context, path)
+
+        if (!fileContent) continue
+
+        files.push({
+          path,
+          type: this.getFileType(path),
+          language: path.endsWith('.py') ? 'Python' : 'Text',
+          size: fileContent.length,
+          lines_of_code: fileContent.split('\n').length,
+          imports: this.extractImports(fileContent),
+          exports: this.extractExports(fileContent),
+          dependencies: [],
+        })
       } catch (error) {
-        // File doesn't exist, continue
+        console.warn(`Could not analyze ${path}`, error)
       }
     }
 
@@ -432,6 +450,29 @@ class DjangoAnalyzer implements FrameworkAnalyzer {
     }
   }
 
+  private async fetchRepositoryStructure(context: AnalysisContext): Promise<string[]> {
+    try {
+      const response = await fetch(
+        `https://api.github.com/repos/${context.repository.full_name}/git/trees/${context.repository.default_branch}?recursive=1`,
+        {
+          headers: {
+            'Authorization': `token ${context.accessToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+          },
+        }
+      )
+
+      if (!response.ok) return []
+
+      const data = await response.json()
+      return data.tree
+        .filter((item: any) => item.type === 'blob')
+        .map((item: any) => item.path)
+    } catch (error) {
+      return []
+    }
+  }
+
   private getFileType(fileName: string): 'source' | 'config' | 'dependency' | 'documentation' | 'test' {
     if (fileName.includes('requirements') || fileName.includes('setup.py')) return 'dependency'
     if (fileName.includes('settings')) return 'config'
@@ -475,118 +516,3 @@ class DjangoAnalyzer implements FrameworkAnalyzer {
   }
 }
 
-// FastAPI Analyzer (similar structure)
-class FastAPIAnalyzer implements FrameworkAnalyzer {
-  canAnalyze(framework: FrameworkDetection): boolean {
-    return framework.framework === 'fastapi'
-  }
-
-  async analyze(context: AnalysisContext): Promise<any> {
-    // Similar to Django but focused on FastAPI patterns
-    const files = await this.fetchFastAPIFiles(context)
-    const nodes = await this.createFastAPINodes(files)
-    const edges = await this.createFastAPIEdges(nodes)
-    const dependencies = await this.analyzeDependencies(context)
-    const risks = await this.identifyFastAPIRisks(files)
-
-    return { files, nodes, edges, dependencies, risks }
-  }
-
-  // Implementation methods similar to Django but FastAPI-specific
-  private async fetchFastAPIFiles(context: AnalysisContext): Promise<FileAnalysis[]> {
-    // Fetch main.py, routers/, models/, etc.
-    return []
-  }
-
-  private async createFastAPINodes(files: FileAnalysis[]): Promise<ArchitectureNode[]> {
-    return []
-  }
-
-  private async createFastAPIEdges(nodes: ArchitectureNode[]): Promise<ArchitectureEdge[]> {
-    return []
-  }
-
-  private async analyzeDependencies(context: AnalysisContext): Promise<string[]> {
-    return []
-  }
-
-  private async identifyFastAPIRisks(files: FileAnalysis[]): Promise<string[]> {
-    return []
-  }
-}
-
-// React Analyzer
-class ReactAnalyzer implements FrameworkAnalyzer {
-  canAnalyze(framework: FrameworkDetection): boolean {
-    return framework.framework === 'react'
-  }
-
-  async analyze(context: AnalysisContext): Promise<any> {
-    const files = await this.fetchReactFiles(context)
-    const nodes = await this.createReactNodes(files)
-    const edges = await this.createReactEdges(nodes)
-    const dependencies = await this.analyzeDependencies(context)
-    const risks = await this.identifyReactRisks(files)
-
-    return { files, nodes, edges, dependencies, risks }
-  }
-
-  // React-specific implementation methods
-  private async fetchReactFiles(context: AnalysisContext): Promise<FileAnalysis[]> {
-    return []
-  }
-
-  private async createReactNodes(files: FileAnalysis[]): Promise<ArchitectureNode[]> {
-    return []
-  }
-
-  private async createReactEdges(nodes: ArchitectureNode[]): Promise<ArchitectureEdge[]> {
-    return []
-  }
-
-  private async analyzeDependencies(context: AnalysisContext): Promise<string[]> {
-    return []
-  }
-
-  private async identifyReactRisks(files: FileAnalysis[]): Promise<string[]> {
-    return []
-  }
-}
-
-// Next.js Analyzer
-class NextJSAnalyzer implements FrameworkAnalyzer {
-  canAnalyze(framework: FrameworkDetection): boolean {
-    return framework.framework === 'nextjs'
-  }
-
-  async analyze(context: AnalysisContext): Promise<any> {
-    const files = await this.fetchNextJSFiles(context)
-    const nodes = await this.createNextJSNodes(files)
-    const edges = await this.createNextJSEdges(nodes)
-    const dependencies = await this.analyzeDependencies(context)
-    const risks = await this.identifyNextJSRisks(files)
-
-    return { files, nodes, edges, dependencies, risks }
-  }
-
-  // Next.js-specific implementation methods
-  private async fetchNextJSFiles(context: AnalysisContext): Promise<FileAnalysis[]> {
-    return []
-  }
-
-  private async createNextJSNodes(files: FileAnalysis[]): Promise<ArchitectureNode[]> {
-    return []
-  }
-
-  private async createNextJSEdges(nodes: ArchitectureNode[]): Promise<ArchitectureEdge[] > {
-    return []
-  }
-
-  private async analyzeDependencies(context: AnalysisContext): Promise<string[]> {
-    return []
-  }
-
-  private async identifyNextJSRisks(files: FileAnalysis[]): Promise<string[]> {
-    return []
-  }
-}

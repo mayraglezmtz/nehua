@@ -157,7 +157,7 @@
   },
   "llm": {
     "provider": "gemini",
-    "model": "gemini-pro",
+    "model": "gemini-2.0-flash",
     "max_tokens": 4096,
     "temperature": 0.3,
     "prompts": {

@@ -1,4 +1,5 @@
 import { AnalysisResult } from '@/types'
+import { jsPDF } from 'jspdf'
 
 export interface ArchitectureReport {
   metadata: {
@@ -67,26 +68,7 @@ export interface ArchitectureReport {
 }
 
 export class ReportGenerator {
-  private config: any
-
-  constructor() {
-    this.loadConfig()
-  }
-
-  private async loadConfig() {
-    try {
-      const configResponse = await fetch('/nehua-config.json')
-      this.config = await configResponse.json()
-    } catch (error) {
-      console.error('Failed to load config for report generation:', error)
-    }
-  }
-
   async generateReport(analysisResult: AnalysisResult): Promise<ArchitectureReport> {
-    if (!this.config) {
-      await this.loadConfig()
-    }
-
     console.log('Generating comprehensive architecture report...')
 
     const report: ArchitectureReport = {
@@ -502,11 +484,112 @@ ${report.technicalDetails.dependencies.slice(0, 20).map(d => `- ${d}`).join('\n'
   }
 
   async exportToPDF(report: ArchitectureReport): Promise<Blob> {
-    // For now, return a simple text-based PDF content
-    // In a real implementation, you would use a library like jsPDF or Puppeteer
-    const content = await this.exportToMarkdown(report)
-    const blob = new Blob([content], { type: 'application/pdf' })
-    return blob
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' })
+    const marginX = 40
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const maxWidth = pageWidth - marginX * 2
+    let cursorY = 50
+
+    const ensureSpace = (lineHeight: number) => {
+      if (cursorY + lineHeight > pageHeight - 40) {
+        doc.addPage()
+        cursorY = 50
+      }
+    }
+
+    const addHeading = (text: string, size = 15) => {
+      ensureSpace(size + 12)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(size)
+      doc.text(text, marginX, cursorY)
+      cursorY += size + 10
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(10)
+    }
+
+    const addParagraph = (text: string) => {
+      if (!text) return
+      const lines = doc.splitTextToSize(text, maxWidth)
+      lines.forEach((line: string) => {
+        ensureSpace(13)
+        doc.text(line, marginX, cursorY)
+        cursorY += 13
+      })
+      cursorY += 5
+    }
+
+    const addBullets = (items: string[]) => {
+      items.forEach(item => {
+        const lines = doc.splitTextToSize(`- ${item}`, maxWidth)
+        lines.forEach((line: string) => {
+          ensureSpace(13)
+          doc.text(line, marginX, cursorY)
+          cursorY += 13
+        })
+      })
+      cursorY += 5
+    }
+
+    addHeading(report.metadata.title, 18)
+    addParagraph(`Generated: ${new Date(report.metadata.generatedAt).toLocaleDateString()}`)
+    addParagraph(`Repository: ${report.metadata.repository}`)
+    addParagraph(`Analysis Duration: ${(report.metadata.duration / 1000).toFixed(2)}s`)
+
+    addHeading('Executive Summary')
+    addParagraph(`Overall Health Score: ${report.executiveSummary.overallHealth}/100`)
+    addParagraph('Key Findings:')
+    addBullets(report.executiveSummary.keyFindings)
+    addParagraph('Critical Issues:')
+    addBullets(report.executiveSummary.criticalIssues)
+    addParagraph('Top Recommendations:')
+    addBullets(report.executiveSummary.recommendations)
+
+    addHeading('Architecture Overview')
+    addParagraph(`Framework: ${report.architectureOverview.framework}`)
+    addParagraph(`Components: ${report.architectureOverview.componentsCount}  |  Connections: ${report.architectureOverview.connectionsCount}`)
+    addParagraph(report.architectureOverview.layerAnalysis)
+    addBullets(report.architectureOverview.patterns)
+
+    addHeading('Health Analysis')
+    const categoryLabels: Array<[keyof ArchitectureReport['healthAnalysis']['categories'], string]> = [
+      ['dependencies', 'Dependencies'],
+      ['architecture', 'Architecture'],
+      ['codeQuality', 'Code Quality'],
+      ['performance', 'Performance'],
+    ]
+    categoryLabels.forEach(([key, label]) => {
+      const category = report.healthAnalysis.categories[key]
+      addHeading(`${label} (${category.score}/100)`, 12)
+      addParagraph(category.reasoning)
+      addBullets(category.issues)
+    })
+
+    addHeading('Risk Assessment')
+    addParagraph(report.riskAssessment.summary)
+    addParagraph(`High: ${report.riskAssessment.riskMatrix.high}  |  Medium: ${report.riskAssessment.riskMatrix.medium}  |  Low: ${report.riskAssessment.riskMatrix.low}`)
+
+    addHeading('Recommendations')
+    const recommendationGroups: Array<[keyof ArchitectureReport['recommendations'], string]> = [
+      ['immediate', 'Immediate Actions'],
+      ['shortTerm', 'Short-term Improvements'],
+      ['longTerm', 'Long-term Enhancements'],
+    ]
+    recommendationGroups.forEach(([key, label]) => {
+      const items = report.recommendations[key]
+      if (items.length === 0) return
+      addHeading(label, 12)
+      addBullets(items.map(r => `${r.title} - ${r.description} (Effort: ${r.effort}, Impact: ${r.impact})`))
+    })
+
+    addHeading('Technical Details')
+    addParagraph(`Files Analyzed: ${report.technicalDetails.filesAnalyzed}`)
+    addParagraph(`Estimated Lines of Code: ${report.technicalDetails.linesOfCode.toLocaleString()}`)
+    addParagraph('Key Technologies:')
+    addBullets(report.technicalDetails.technologies)
+
+    const arrayBuffer = doc.output('arraybuffer')
+    return new Blob([arrayBuffer], { type: 'application/pdf' })
   }
 }
 

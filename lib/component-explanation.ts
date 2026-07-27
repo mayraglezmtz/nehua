@@ -1,5 +1,6 @@
-import { kiroMCPService } from './kiro-mcp'
+import { geminiService } from './gemini-service'
 import { ArchitectureNode } from '@/types'
+import nehuaConfig from '@/public/nehua-config.json'
 
 export interface ComponentExplanation {
   explanation: string
@@ -11,20 +12,7 @@ export interface ComponentExplanation {
 }
 
 export class ComponentExplanationService {
-  private config: any
-
-  constructor() {
-    this.loadConfig()
-  }
-
-  private async loadConfig() {
-    try {
-      const configResponse = await fetch('/nehua-config.json')
-      this.config = await configResponse.json()
-    } catch (error) {
-      console.error('Failed to load config for component explanation:', error)
-    }
-  }
+  private config: any = nehuaConfig
 
   async explainComponent(
     node: ArchitectureNode,
@@ -35,10 +23,6 @@ export class ComponentExplanationService {
       edges: any[]
     }
   ): Promise<ComponentExplanation> {
-    if (!this.config) {
-      await this.loadConfig()
-    }
-
     try {
       console.log(`Explaining component: ${node.label}`)
 
@@ -50,7 +34,7 @@ export class ComponentExplanationService {
         related_components: relatedNodes.map(n => ({ label: n.label, type: n.type }))
       }
 
-      const aiExplanation = await kiroMCPService.explainComponent(
+      const aiExplanation = await geminiService.explainComponent(
         enhancedComponentInfo,
         contextInfo,
         this.config

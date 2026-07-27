@@ -1,11 +1,10 @@
-export interface KiroMCPRequest {
+export interface GeminiRequest {
   prompt: string
-  context?: any
   temperature?: number
   max_tokens?: number
 }
 
-export interface KiroMCPResponse {
+export interface GeminiResponse {
   success: boolean
   data?: {
     response: string
@@ -18,66 +17,85 @@ export interface KiroMCPResponse {
   error?: string
 }
 
-export class KiroMCPService {
-  private baseUrl: string
+export class GeminiService {
+  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta'
   private apiKey?: string
+  private model: string
 
   constructor() {
-    this.baseUrl = process.env.KIRO_API_ENDPOINT || 'http://localhost:8000'
-    this.apiKey = process.env.KIRO_API_KEY
+    this.apiKey = process.env.GEMINI_API_KEY
+    this.model = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
   }
 
-  async makeRequest(request: KiroMCPRequest): Promise<KiroMCPResponse> {
+  async makeRequest(request: GeminiRequest): Promise<GeminiResponse> {
+    if (!this.apiKey) {
+      return {
+        success: false,
+        error: 'GEMINI_API_KEY is not configured'
+      }
+    }
+
     try {
-      console.log('Making Kiro MCP request:', { 
+      console.log('Making Gemini request:', {
+        model: this.model,
         prompt: request.prompt.substring(0, 100) + '...',
         temperature: request.temperature,
         max_tokens: request.max_tokens
       })
 
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      }
-
-      if (this.apiKey) {
-        headers['Authorization'] = `Bearer ${this.apiKey}`
-      }
-
-      const response = await fetch(`${this.baseUrl}/api/gemini/generate`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          prompt: request.prompt,
-          context: request.context,
-          temperature: request.temperature || 0.3,
-          max_tokens: request.max_tokens || 4096,
-          model: 'gemini-pro'
-        })
-      })
+      const response = await fetch(
+        `${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: request.prompt }] }],
+            generationConfig: {
+              temperature: request.temperature ?? 0.3,
+              maxOutputTokens: request.max_tokens ?? 4096,
+            }
+          })
+        }
+      )
 
       if (!response.ok) {
         const errorText = await response.text()
-        throw new Error(`Kiro MCP API error: ${response.status} - ${errorText}`)
+        throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
       }
 
       const data = await response.json()
-      
-      console.log('Kiro MCP response received:', {
+      const text = data.candidates?.[0]?.content?.parts
+        ?.map((part: any) => part.text || '')
+        .join('') || ''
+
+      if (!text) {
+        throw new Error('Gemini returned an empty response')
+      }
+
+      const usageMetadata = data.usageMetadata
+
+      console.log('Gemini response received:', {
         success: true,
-        usage: data.usage
+        usage: usageMetadata
       })
 
       return {
         success: true,
         data: {
-          response: data.response || data.text || data.content,
-          usage: data.usage
+          response: text,
+          usage: usageMetadata ? {
+            prompt_tokens: usageMetadata.promptTokenCount,
+            completion_tokens: usageMetadata.candidatesTokenCount,
+            total_tokens: usageMetadata.totalTokenCount
+          } : undefined
         }
       }
 
     } catch (error) {
-      console.error('Kiro MCP request failed:', error)
-      
+      console.error('Gemini request failed:', error)
+
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -96,7 +114,7 @@ export class KiroMCPService {
     insights: string[]
   }> {
     const prompt = this.buildArchitectureAnalysisPrompt(repositoryInfo, staticAnalysis, config)
-    
+
     const response = await this.makeRequest({
       prompt,
       temperature: 0.3,
@@ -126,7 +144,7 @@ export class KiroMCPService {
     overall_assessment: string
   }> {
     const prompt = this.buildRiskAssessmentPrompt(repositoryInfo, dependencies, staticAnalysis, config)
-    
+
     const response = await this.makeRequest({
       prompt,
       temperature: 0.2,
@@ -161,7 +179,7 @@ export class KiroMCPService {
     }
   }> {
     const prompt = this.buildHealthScorePrompt(repositoryInfo, staticAnalysis, config)
-    
+
     const response = await this.makeRequest({
       prompt,
       temperature: 0.1,
@@ -189,7 +207,7 @@ export class KiroMCPService {
     estimated_effort: 'low' | 'medium' | 'high'
   }>> {
     const prompt = this.buildRecommendationsPrompt(repositoryInfo, healthScore, risks, config)
-    
+
     const response = await this.makeRequest({
       prompt,
       temperature: 0.4,
@@ -214,7 +232,7 @@ export class KiroMCPService {
     technical_details: string
   }> {
     const prompt = this.buildComponentExplanationPrompt(componentInfo, contextInfo, config)
-    
+
     const response = await this.makeRequest({
       prompt,
       temperature: 0.3,
@@ -306,7 +324,7 @@ Age: Created ${repositoryInfo.created_at}
 Evaluation Criteria (each category 0-100):
 1. Dependencies (25%): Package freshness, security, management
 2. Architecture (25%): Separation of concerns, modularity, patterns
-3. Code Quality (25%): Organization, documentation, maintainability  
+3. Code Quality (25%): Organization, documentation, maintainability
 4. Performance (25%): Bundle size, optimization, async patterns
 
 Provide scores and detailed reasoning for each category plus overall assessment.
@@ -324,7 +342,7 @@ Format as JSON: overall_score, category_scores {dependencies, architecture, code
 
 Health Score: ${healthScore.overall_score}/100
 - Dependencies: ${healthScore.category_scores?.dependencies}/100
-- Architecture: ${healthScore.category_scores?.architecture}/100  
+- Architecture: ${healthScore.category_scores?.architecture}/100
 - Code Quality: ${healthScore.category_scores?.code_quality}/100
 - Performance: ${healthScore.category_scores?.performance}/100
 
@@ -370,7 +388,7 @@ Format as JSON: explanation, purpose, relationships (array), technical_details`
       if (jsonMatch) {
         return JSON.parse(jsonMatch[1] || jsonMatch[0]);
       }
-      
+
       // Fallback parsing if no JSON found
       return {
         components: [],
@@ -395,7 +413,7 @@ Format as JSON: explanation, purpose, relationships (array), technical_details`
       if (jsonMatch) {
         return JSON.parse(jsonMatch[1] || jsonMatch[0]);
       }
-      
+
       return {
         risks: [],
         overall_assessment: response.substring(0, 300)
@@ -414,7 +432,7 @@ Format as JSON: explanation, purpose, relationships (array), technical_details`
       if (jsonMatch) {
         return JSON.parse(jsonMatch[1] || jsonMatch[0]);
       }
-      
+
       return {
         overall_score: 70,
         category_scores: {
@@ -426,7 +444,7 @@ Format as JSON: explanation, purpose, relationships (array), technical_details`
         reasoning: {
           dependencies: 'Analysis completed',
           architecture: 'Analysis completed',
-          code_quality: 'Analysis completed', 
+          code_quality: 'Analysis completed',
           performance: 'Analysis completed',
           overall: response.substring(0, 200)
         }
@@ -446,7 +464,7 @@ Format as JSON: explanation, purpose, relationships (array), technical_details`
       if (jsonMatch) {
         return JSON.parse(jsonMatch[1] || jsonMatch[0]);
       }
-      
+
       return [];
     } catch (error) {
       return [];
@@ -459,7 +477,7 @@ Format as JSON: explanation, purpose, relationships (array), technical_details`
       if (jsonMatch) {
         return JSON.parse(jsonMatch[1] || jsonMatch[0]);
       }
-      
+
       return {
         explanation: response.substring(0, 400),
         purpose: 'Component analysis completed',
@@ -478,4 +496,4 @@ Format as JSON: explanation, purpose, relationships (array), technical_details`
 }
 
 // Export singleton instance
-export const kiroMCPService = new KiroMCPService()
+export const geminiService = new GeminiService()

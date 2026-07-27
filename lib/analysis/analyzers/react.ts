@@ -1,4 +1,4 @@
-import { AnalysisContext, FrameworkAnalyzer } from '../static-engine'
+import type { AnalysisContext, FrameworkAnalyzer } from '../static-engine'
 import { FileAnalysis, ArchitectureNode, ArchitectureEdge } from '@/types'
 
 export class ReactAnalyzer implements FrameworkAnalyzer {

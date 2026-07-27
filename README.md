@@ -11,7 +11,7 @@ Nehua reconstructs architectural knowledge from existing GitHub repositories thr
 
 - 🔐 **GitHub OAuth Integration** - Secure authentication with full session management
 - 📊 **Interactive Architecture Visualization** - React Flow diagrams with liquid glass UI
-- 🧠 **AI-Powered Analysis** - Gemini API integration via Kiro MCP with fallback
+- 🧠 **AI-Powered Analysis** - Direct Gemini API integration with intelligent fallback
 - 📈 **Health Score System** - Comprehensive 4-category evaluation with AI reasoning
 - 🎨 **Liquid Glass UI** - Modern glassmorphism design with advanced animations
 - 📋 **Detailed Reports** - Multi-format exports (JSON, Markdown, PDF) with action plans
@@ -31,7 +31,7 @@ Nehua reconstructs architectural knowledge from existing GitHub repositories thr
 - **Authentication**: NextAuth.js with GitHub Provider
 - **UI**: Tailwind CSS + Framer Motion + Radix UI + Liquid Glass Effects
 - **Visualization**: Custom React Flow nodes with animated edges
-- **AI**: Gemini API via Kiro MCP with intelligent fallback
+- **AI**: Gemini API (direct) with intelligent static-analysis fallback
 - **Analysis**: Multi-framework static analysis engine
 - **Export**: JSON/Markdown/PDF report generation
 
@@ -41,7 +41,7 @@ Nehua reconstructs architectural knowledge from existing GitHub repositories thr
 
 - Conda (Miniconda or Anaconda)
 - GitHub Account
-- Kiro CLI (for Gemini API access)
+- A Gemini API key (optional, for AI-enhanced analysis - see below)
 
 ### Installation
 
@@ -69,7 +69,8 @@ NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-here
 GITHUB_ID=your-github-oauth-app-id
 GITHUB_SECRET=your-github-oauth-app-secret
-KIRO_API_ENDPOINT=http://localhost:8000
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-2.0-flash
 ```
 
 3. **GitHub OAuth Setup**
@@ -79,14 +80,13 @@ KIRO_API_ENDPOINT=http://localhost:8000
   - Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
 - Copy Client ID and Client Secret to `.env.local`
 
-4. **Kiro MCP Setup (for AI Analysis)**
+4. **Gemini API Setup (for AI Analysis)**
 ```bash
-# Install and configure Kiro CLI with Gemini API access
-# Start Kiro MCP server for AI analysis
-kiro mcp start --port 8000
+# Get a free API key from https://aistudio.google.com/apikey
+# Add it to .env.local as GEMINI_API_KEY
 
-# Verify MCP endpoint is working
-curl http://localhost:8000/health
+# Without a key, Nehua still works: it automatically falls back
+# to static, rule-based analysis instead of AI-enhanced analysis.
 ```
 
 5. **Run Development Server**
@@ -114,7 +114,7 @@ nehua/
 │   ├── analysis/                 # Static analysis engine
 │   │   ├── analyzers/           # Framework-specific analyzers
 │   │   └── static-engine.ts     # Analysis orchestrator
-│   ├── kiro-mcp.ts             # AI integration service
+│   ├── gemini-service.ts        # AI integration service
 │   ├── report-generator.ts      # Multi-format report export
 │   └── demo-optimization.ts     # Demo polish & analytics
 ├── types/                        # TypeScript definitions
@@ -170,7 +170,7 @@ All project settings are centralized in `nehua-config.json`:
 - [x] **GitHub OAuth** - Authentication flow with session management  
 - [x] **Repository Interface** - Selection, filtering, framework detection
 - [x] **Static Analysis** - Multi-framework parsing and component detection
-- [x] **AI Integration** - Gemini API via Kiro MCP with intelligent fallback
+- [x] **AI Integration** - Direct Gemini API integration with intelligent fallback
 - [x] **Interactive Visualization** - React Flow with custom nodes and edges
 - [x] **Health Score System** - AI-powered scoring with category breakdown
 - [x] **Liquid Glass UI** - Modern glassmorphism with advanced animations

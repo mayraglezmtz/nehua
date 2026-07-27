@@ -101,18 +101,18 @@
 
   /* Gradient Backgrounds */
   .gradient-mesh {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    background: linear-gradient(
-      135deg,
-      rgba(250, 0, 128, 0.1) 0%,
-      rgba(0, 221, 250, 0.1) 25%,
-      rgba(250, 221, 0, 0.1) 50%,
-      rgba(165, 152, 55, 0.1) 75%,
-      rgba(122, 61, 93, 0.1) 100%
-    );
-    background-size: 400% 400%;
-    animation: gradient-shift 15s ease infinite;
-  }
+  background: linear-gradient(
+    135deg,
+    rgba(250, 0, 128, 0.03) 0%,
+    rgba(0, 221, 250, 0.03) 25%,
+    rgba(250, 221, 0, 0.015) 50%,
+    rgba(165, 152, 55, 0.025) 75%,
+    rgba(122, 61, 93, 0.025) 100%
+  );
+
+  background-size: 400% 400%;
+  animation: gradient-shift 20s ease infinite;
+}
   
   @keyframes gradient-shift {
     0% { background-position: 0% 50%; }

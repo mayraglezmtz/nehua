@@ -219,7 +219,7 @@ export default function RepositorySelection() {
   const availableLanguages = useMemo(() => {
     const languages = repositories
       .map(repo => repo.language)
-      .filter(Boolean)
+      .filter((lang): lang is string => Boolean(lang))
       .filter((lang, index, arr) => arr.indexOf(lang) === index)
     return languages.sort()
   }, [repositories])
@@ -227,7 +227,7 @@ export default function RepositorySelection() {
   const availableFrameworks = useMemo(() => {
     const frameworks = repositories
       .map(repo => repo.framework?.framework)
-      .filter(Boolean)
+      .filter((framework): framework is string => Boolean(framework))
       .filter((framework, index, arr) => arr.indexOf(framework) === index)
     return frameworks.sort()
   }, [repositories])

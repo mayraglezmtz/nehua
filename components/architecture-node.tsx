@@ -236,8 +236,8 @@ export function ArchitectureNode({ data, selected }: ArchitectureNodeProps) {
               style={{
                 backgroundColor: colors.bg,
                 color: 'white',
-                focusRingColor: colors.border
-              }}
+                '--tw-ring-color': colors.border
+              } as React.CSSProperties}
             >
               Explain Component
             </button>

@@ -44,10 +44,8 @@ export async function POST(request: NextRequest) {
 
       case 'pdf':
         const pdfBlob = await reportGenerator.exportToPDF(report)
-        // For demo purposes, we'll return the markdown content
-        // In production, you'd return the actual PDF blob
-        const pdfContent = await reportGenerator.exportToMarkdown(report)
-        responseData = { content: pdfContent, report, format: 'pdf' }
+        const pdfBuffer = Buffer.from(await pdfBlob.arrayBuffer())
+        responseData = { content: pdfBuffer.toString('base64'), encoding: 'base64', report, format: 'pdf' }
         contentType = 'application/pdf'
         filename = `${analysisResult.repository.name}-architecture-report.pdf`
         break

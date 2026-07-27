@@ -20,7 +20,7 @@ const frameworkColors: Record<string, string> = {
   nextjs: '#000000',
 }
 
-const frameworkIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+const frameworkIcons: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
   django: Code2,
   fastapi: Zap,
   react: Code2,

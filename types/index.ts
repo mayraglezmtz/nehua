@@ -84,6 +84,7 @@ export interface HealthScore {
     architecture: string;
     code_quality: string;
     performance: string;
+    overall?: string;
   };
 }
 

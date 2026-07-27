@@ -1,4 +1,5 @@
-import { Repository } from '@/types'
+import { Repository, FrameworkDetection } from '@/types'
+import nehuaConfig from '@/public/nehua-config.json'
 
 export class GitHubService {
   private baseUrl = 'https://api.github.com'
@@ -12,10 +13,10 @@ export class GitHubService {
   }> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/user/repos?page=${page}&per_page=${per_page}&sort=updated&type=public`,
+        `${this.baseUrl}/user/repos?page=${page}&per_page=${per_page}&sort=updated&affiliation=owner,collaborator,organization_member`,
         {
           headers: {
-            'Authorization': `token ${this.accessToken}`,
+            Authorization: `Bearer ${this.accessToken}`,
             'Accept': 'application/vnd.github.v3+json',
           },
         }
@@ -110,21 +111,24 @@ export async function detectFramework(
   accessToken: string,
   owner: string,
   repo: string
-): Promise<{ framework: string; confidence: number } | null> {
+): Promise<FrameworkDetection | null> {
   // Load framework detection rules from config
-  const configResponse = await fetch('/nehua-config.json')
-  const config = await configResponse.json()
-  const frameworks = config.frameworks
+  const frameworks = nehuaConfig.frameworks
 
-  // Check for framework-specific files
-  const githubService = new GitHubService(accessToken)
-  
+  if (!frameworks) {
+    throw new Error('The frameworks property is missing from nehua-config.json')
+  }
+
   try {
-    // Check for key files that indicate specific frameworks
-    for (const [frameworkKey, frameworkConfig] of Object.entries(frameworks)) {
-      const keyFiles = frameworkConfig.key_files as string[]
-      
-      for (const file of keyFiles) {
+    // Check for key files that indicate specific frameworks. Every
+    // (framework, file) pair is probed concurrently instead of sequentially
+    // to avoid a multi-second, rate-limit-heavy detection step.
+    const checks = Object.entries(frameworks).flatMap(([frameworkKey, frameworkConfig]) =>
+      (frameworkConfig.key_files as string[]).map(file => ({ frameworkKey, file }))
+    )
+
+    const results = await Promise.all(
+      checks.map(async ({ frameworkKey, file }) => {
         try {
           const response = await fetch(
             `https://api.github.com/repos/${owner}/${repo}/contents/${file}`,
@@ -135,37 +139,41 @@ export async function detectFramework(
               },
             }
           )
-          
-          if (response.ok) {
-            // Found a key file, high confidence
-            return {
-              framework: frameworkKey,
-              confidence: 0.9
-            }
-          }
+
+          return response.ok ? { frameworkKey, file } : null
         } catch (error) {
-          // File doesn't exist, continue checking
-          continue
+          return null
         }
+      })
+    )
+
+    const detected = results.find(
+      (result): result is { frameworkKey: string; file: string } => result !== null
+    )
+    if (detected) {
+      return {
+        framework: detected.frameworkKey,
+        confidence: 0.9,
+        evidence: [detected.file]
       }
     }
 
     // Fallback to language-based detection with lower confidence
     const totalBytes = Object.values(languages).reduce((sum, bytes) => sum + bytes, 0)
-    
+
     if (languages.Python && languages.Python / totalBytes > 0.5) {
       // Check for Django/FastAPI patterns
       if (languages.HTML || languages.CSS) {
-        return { framework: 'django', confidence: 0.6 }
+        return { framework: 'django', confidence: 0.6, evidence: ['Python-majority codebase with HTML/CSS templates'] }
       }
-      return { framework: 'fastapi', confidence: 0.5 }
+      return { framework: 'fastapi', confidence: 0.5, evidence: ['Python-majority codebase'] }
     }
-    
+
     if (languages.JavaScript || languages.TypeScript) {
       const jsBytes = (languages.JavaScript || 0) + (languages.TypeScript || 0)
       if (jsBytes / totalBytes > 0.5) {
         // Default to React for JS/TS heavy repos
-        return { framework: 'react', confidence: 0.4 }
+        return { framework: 'react', confidence: 0.4, evidence: ['JavaScript/TypeScript-majority codebase'] }
       }
     }
 

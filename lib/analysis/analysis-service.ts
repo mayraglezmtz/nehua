@@ -1,24 +1,24 @@
 import { Repository, FrameworkDetection, AnalysisResult, HealthScore } from '@/types'
 import { StaticAnalysisEngine } from './static-engine'
-import { kiroMCPService } from '@/lib/kiro-mcp'
+import { geminiService } from '@/lib/gemini-service'
+import nehuaConfig from '@/public/nehua-config.json'
 
 export class AnalysisService {
-  private engine: StaticAnalysisEngine
+  private engine!: StaticAnalysisEngine
   private config: any
 
   constructor() {
     this.loadConfig()
   }
 
-  private async loadConfig() {
-    try {
-      const configResponse = await fetch('/nehua-config.json')
-      this.config = await configResponse.json()
-      this.engine = new StaticAnalysisEngine(this.config)
-    } catch (error) {
-      console.error('Failed to load configuration:', error)
-      throw new Error('Configuration not available')
-    }
+  private loadConfig() {
+  try {
+    this.config = nehuaConfig
+    this.engine = new StaticAnalysisEngine(this.config)
+  } catch (error) {
+    console.error('Failed to load configuration:', error)
+    throw new Error('Configuration not available')
+  }
   }
 
   async analyzeRepository(
@@ -27,7 +27,7 @@ export class AnalysisService {
     accessToken: string
   ): Promise<AnalysisResult> {
     if (!this.engine) {
-      await this.loadConfig()
+      this.loadConfig()
     }
 
     const startTime = Date.now()
@@ -55,7 +55,7 @@ export class AnalysisService {
       try {
         // AI Architecture Analysis
         console.log('Running AI architecture analysis...')
-        const architectureAnalysis = await kiroMCPService.analyzeArchitecture(
+        const architectureAnalysis = await geminiService.analyzeArchitecture(
           repository,
           { 
             nodes: staticResult.nodes, 
@@ -72,7 +72,7 @@ export class AnalysisService {
 
         // AI Risk Assessment  
         console.log('Running AI risk assessment...')
-        const riskAssessment = await kiroMCPService.assessRisks(
+        const riskAssessment = await geminiService.assessRisks(
           repository,
           staticResult.dependencies,
           staticResult,
@@ -85,7 +85,7 @@ export class AnalysisService {
 
         // AI Health Score Calculation
         console.log('Calculating AI-powered health score...')
-        const aiHealthScoreResult = await kiroMCPService.calculateHealthScore(
+        const aiHealthScoreResult = await geminiService.calculateHealthScore(
           repository,
           {
             nodes: enhancedNodes,
@@ -105,7 +105,7 @@ export class AnalysisService {
 
         // AI Recommendations
         console.log('Generating AI recommendations...')
-        aiRecommendations = await kiroMCPService.generateRecommendations(
+        aiRecommendations = await geminiService.generateRecommendations(
           repository,
           aiHealthScore,
           riskAssessment.risks,
@@ -332,51 +332,6 @@ export class AnalysisService {
     if (hasPerformanceLibs) score += 15
 
     return Math.max(0, Math.min(100, score))
-  }
-
-  private async generateRecommendations(analysisResult: any, healthScore: HealthScore): Promise<any[]> {
-    const recommendations: any[] = []
-
-    // Architecture recommendations
-    if (healthScore.categories.architecture < 70) {
-      recommendations.push({
-        id: 'arch-separation',
-        category: 'architecture',
-        priority: 'high',
-        title: 'Improve Separation of Concerns',
-        description: 'Consider breaking down large modules into smaller, more focused components.',
-        implementation: 'Create separate modules for different business domains.',
-        estimated_effort: 'medium'
-      })
-    }
-
-    // Dependencies recommendations
-    if (healthScore.categories.dependencies < 60) {
-      recommendations.push({
-        id: 'deps-security',
-        category: 'dependencies',
-        priority: 'high',
-        title: 'Add Security Dependencies',
-        description: 'Include security-focused libraries to protect against common vulnerabilities.',
-        implementation: 'Add libraries like helmet, cors, or bcrypt depending on your framework.',
-        estimated_effort: 'low'
-      })
-    }
-
-    // Performance recommendations
-    if (healthScore.categories.performance < 70) {
-      recommendations.push({
-        id: 'perf-optimization',
-        category: 'performance',
-        priority: 'medium',
-        title: 'Optimize Bundle Size',
-        description: 'Consider code splitting and tree shaking to reduce bundle size.',
-        implementation: 'Use dynamic imports and remove unused dependencies.',
-        estimated_effort: 'medium'
-      })
-    }
-
-    return recommendations
   }
 
   // Helper methods for risk categorization

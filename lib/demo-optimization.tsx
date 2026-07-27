@@ -157,6 +157,25 @@ export class DemoPerformanceMonitor {
   }
 }
 
+// Demo data for offline mode (declared standalone so it can be referenced
+// directly inside demoAnalysisResult below, instead of patched in after
+// the fact)
+const demoRepository = {
+  id: 12345,
+  name: 'demo-fastapi-app',
+  full_name: 'demo-user/demo-fastapi-app',
+  description: 'A sample FastAPI application for Nehua demo',
+  html_url: 'https://github.com/demo-user/demo-fastapi-app',
+  clone_url: 'https://github.com/demo-user/demo-fastapi-app.git',
+  default_branch: 'main',
+  language: 'Python',
+  languages_url: 'https://api.github.com/repos/demo-user/demo-fastapi-app/languages',
+  size: 2048,
+  created_at: '2024-01-15T10:00:00Z',
+  updated_at: '2024-01-20T15:30:00Z',
+  pushed_at: '2024-01-20T15:30:00Z'
+}
+
 // 4. Demo Configuration
 export const DEMO_CONFIG = {
   // Feature flags for demo
@@ -168,26 +187,11 @@ export const DEMO_CONFIG = {
     enableDebugPanel: process.env.NODE_ENV === 'development'
   },
 
-  // Demo data for offline mode
-  demoRepository: {
-    id: 12345,
-    name: 'demo-fastapi-app',
-    full_name: 'demo-user/demo-fastapi-app',
-    description: 'A sample FastAPI application for Nehua demo',
-    html_url: 'https://github.com/demo-user/demo-fastapi-app',
-    clone_url: 'https://github.com/demo-user/demo-fastapi-app.git',
-    default_branch: 'main',
-    language: 'Python',
-    languages_url: 'https://api.github.com/repos/demo-user/demo-fastapi-app/languages',
-    size: 2048,
-    created_at: '2024-01-15T10:00:00Z',
-    updated_at: '2024-01-20T15:30:00Z',
-    pushed_at: '2024-01-20T15:30:00Z'
-  },
+  demoRepository,
 
   // Demo analysis result
   demoAnalysisResult: {
-    repository: null, // Will be set to demoRepository
+    repository: demoRepository,
     frameworks: [{ framework: 'fastapi', confidence: 0.9, evidence: ['main.py', 'requirements.txt'] }],
     nodes: [
       {
@@ -310,9 +314,6 @@ export const DEMO_CONFIG = {
     currentStep: 0
   }
 }
-
-// Initialize demo repository reference
-DEMO_CONFIG.demoAnalysisResult.repository = DEMO_CONFIG.demoRepository
 
 // 5. Demo Utilities
 export class DemoUtils {
