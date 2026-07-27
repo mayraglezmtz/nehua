@@ -162,9 +162,9 @@ export function ReportViewer({ analysisResult, isOpen, onClose }: ReportViewerPr
                     onChange={(e) => setExportFormat(e.target.value as any)}
                     className="glass-input px-3 py-2 text-sm text-white border-0 rounded-lg"
                   >
-                    <option value="markdown">Markdown</option>
-                    <option value="json">JSON</option>
-                    <option value="pdf">PDF</option>
+                    <option value="markdown" className="bg-slate-900 text-white">Markdown</option>
+                    <option value="json" className="bg-slate-900 text-white">JSON</option>
+                    <option value="pdf" className="bg-slate-900 text-white">PDF</option>
                   </select>
 
                   <Button

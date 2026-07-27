@@ -132,9 +132,9 @@ export function RepositoryFilters({
                   transition-all duration-200
                 "
               >
-                <option value="">All languages</option>
+                <option value="" className="bg-slate-900 text-white">All languages</option>
                 {availableLanguages.map((language) => (
-                  <option key={language} value={language}>
+                  <option key={language} value={language} className="bg-slate-900 text-white">
                     {language}
                   </option>
                 ))}
@@ -157,9 +157,9 @@ export function RepositoryFilters({
                   transition-all duration-200
                 "
               >
-                <option value="">All frameworks</option>
+                <option value="" className="bg-slate-900 text-white">All frameworks</option>
                 {availableFrameworks.map((framework) => (
-                  <option key={framework} value={framework}>
+                  <option key={framework} value={framework} className="bg-slate-900 text-white">
                     {framework.charAt(0).toUpperCase() + framework.slice(1)}
                   </option>
                 ))}

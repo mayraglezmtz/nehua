@@ -205,7 +205,6 @@ export function HealthScoreGauge({
           {categoryConfigs.map((category, index) => {
             const categoryRadius = (config.categorySize - config.categoryStroke) / 2
             const categoryCircumference = categoryRadius * 2 * Math.PI
-            const categoryScoreConfig = getScoreColor(category.score)
             const Icon = category.icon
 
             return (
@@ -214,82 +213,78 @@ export function HealthScoreGauge({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 2 + index * 0.1 }}
-                className="glass-panel p-4 hover:shadow-xl transition-all duration-300 interactive-hover"
+                className="glass-panel p-3 hover:shadow-xl transition-all duration-300 interactive-hover flex flex-col items-center text-center gap-2"
               >
-                <div className="flex items-center space-x-3">
-                  {/* Category mini-gauge */}
-                  <div className="relative">
-                    <svg
-                      width={config.categorySize}
-                      height={config.categorySize}
-                      className="transform -rotate-90"
-                    >
-                      <circle
-                        cx={config.categorySize / 2}
-                        cy={config.categorySize / 2}
-                        r={categoryRadius}
-                        stroke="#334155"
-                        strokeWidth={config.categoryStroke}
-                        fill="none"
-                      />
-                      <motion.circle
-                        cx={config.categorySize / 2}
-                        cy={config.categorySize / 2}
-                        r={categoryRadius}
-                        stroke={category.color}
-                        strokeWidth={config.categoryStroke}
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeDasharray={categoryCircumference}
-                        initial={{ strokeDashoffset: categoryCircumference }}
-                        animate={{ 
-                          strokeDashoffset: categoryCircumference - (category.score / 100) * categoryCircumference 
-                        }}
-                        transition={{ duration: 1.5, ease: "easeOut", delay: 2.5 + index * 0.2 }}
-                      />
-                    </svg>
-                    
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Icon 
-                        className="w-4 h-4" 
-                        style={{ color: category.color }}
-                      />
-                    </div>
-                  </div>
+                {/* Category mini-gauge */}
+                <div className="relative flex-shrink-0">
+                  <svg
+                    width={config.categorySize}
+                    height={config.categorySize}
+                    className="transform -rotate-90"
+                  >
+                    <circle
+                      cx={config.categorySize / 2}
+                      cy={config.categorySize / 2}
+                      r={categoryRadius}
+                      stroke="#334155"
+                      strokeWidth={config.categoryStroke}
+                      fill="none"
+                    />
+                    <motion.circle
+                      cx={config.categorySize / 2}
+                      cy={config.categorySize / 2}
+                      r={categoryRadius}
+                      stroke={category.color}
+                      strokeWidth={config.categoryStroke}
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeDasharray={categoryCircumference}
+                      initial={{ strokeDashoffset: categoryCircumference }}
+                      animate={{
+                        strokeDashoffset: categoryCircumference - (category.score / 100) * categoryCircumference
+                      }}
+                      transition={{ duration: 1.5, ease: "easeOut", delay: 2.5 + index * 0.2 }}
+                    />
+                  </svg>
 
-                  {/* Category details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium text-white truncate">
-                        {category.label}
-                      </h4>
-                      <span 
-                        className="text-sm font-bold ml-2"
-                        style={{ color: category.color }}
-                      >
-                        {category.score}
-                      </span>
-                    </div>
-                    
-                    {reasoning[category.key as keyof typeof reasoning] && (
-                      <p className="text-xs text-gray-400 mt-1 line-clamp-2">
-                        {reasoning[category.key as keyof typeof reasoning]}
-                      </p>
-                    )}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Icon
+                      className="w-4 h-4"
+                      style={{ color: category.color }}
+                    />
                   </div>
                 </div>
 
+                {/* Category details */}
+                <div className="w-full min-w-0">
+                  <h4 className="text-xs font-medium text-white leading-tight break-words">
+                    {category.label}
+                  </h4>
+                  <span
+                    className="text-sm font-bold"
+                    style={{ color: category.color }}
+                  >
+                    {category.score}
+                  </span>
+
+                  {reasoning[category.key as keyof typeof reasoning] && (
+                    <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+                      {reasoning[category.key as keyof typeof reasoning]}
+                    </p>
+                  )}
+                </div>
+
                 {/* Category trend indicator */}
-                <div className="mt-2 flex items-center space-x-1">
+                <div className="flex items-center justify-center space-x-1">
                   {category.score >= 80 ? (
-                    <TrendingUp className="w-3 h-3 text-green-500" />
+                    <TrendingUp className="w-3 h-3 text-green-500 flex-shrink-0" />
                   ) : category.score >= 60 ? (
-                    <Info className="w-3 h-3 text-yellow-500" />
+                    <Info className="w-3 h-3 text-yellow-500 flex-shrink-0" />
                   ) : (
-                    <TrendingDown className="w-3 h-3 text-red-500" />
+                    <TrendingDown className="w-3 h-3 text-red-500 flex-shrink-0" />
                   )}
                   <span className="text-xs text-gray-400">
-                    {category.score >= 80 ? 'Excellent' : 
+                    {category.score >= 80 ? 'Excellent' :
                      category.score >= 60 ? 'Needs attention' : 'Critical'}
                   </span>
                 </div>
