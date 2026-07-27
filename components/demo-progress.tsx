@@ -105,7 +105,7 @@ export function DemoProgress({ className = '' }: DemoProgressProps) {
           🏗️ Nehua Architecture Analysis Demo
         </p>
         <p className="text-xs text-gray-500 text-center mt-1">
-          24-Hour Hackathon MVP
+          Hackathon MVP
         </p>
       </div>
     </div>

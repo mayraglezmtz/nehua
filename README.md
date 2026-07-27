@@ -16,7 +16,7 @@ Nehua reconstructs architectural knowledge from existing GitHub repositories thr
 - 📈 **Health Score System** - Comprehensive 4-category evaluation with AI reasoning
 - 🎨 **Liquid Glass UI** - Modern glassmorphism design with advanced animations
 - 📋 **Detailed Reports** - Multi-format exports (JSON, Markdown, PDF) with action plans
-- 🎯 **Interactive Nodes** - Click-to-select, path highlighting, real-time AI explanations
+- 🎯 **Interactive Nodes** - Click-to-select and path highlighting
 - ⚡ **Performance Optimized** - Error boundaries, analytics tracking, demo polish
 
 ## 🚀 Supported Frameworks
@@ -40,24 +40,20 @@ Nehua reconstructs architectural knowledge from existing GitHub repositories thr
 
 ### Prerequisites
 
-- Conda (Miniconda or Anaconda)
-- GitHub Account
+- Node.js 18+ and npm
+- A GitHub account (and a GitHub OAuth App - see step 3)
 - A Gemini API key (optional, for AI-enhanced analysis - see below)
 
 ### Installation
 
-1. **Clone and setup conda environment**
+1. **Clone and install dependencies**
 ```bash
 git clone <repository-url>
 cd nehua
-
-# Create and activate conda environment
-conda env create -f environment.yml
-conda activate nehua-env
-
-# Install Node.js dependencies
 npm install
 ```
+
+If you'd rather manage Node via Conda instead of an existing install, `environment.yml` sets up a `nehua-env` environment with Node 18+ (`conda env create -f environment.yml && conda activate nehua-env`) - this is optional, plain `npm install` above is all that's actually required.
 
 2. **Environment Configuration**
 ```bash
@@ -73,6 +69,8 @@ GITHUB_SECRET=your-github-oauth-app-secret
 GEMINI_API_KEY=your-gemini-api-key
 GEMINI_MODEL=gemini-2.5-flash
 ```
+
+Generate a `NEXTAUTH_SECRET` with `openssl rand -base64 32` (or any random string generator).
 
 3. **GitHub OAuth Setup**
 - Go to GitHub Settings > Developer Settings > OAuth Apps
@@ -96,6 +94,8 @@ npm run dev
 ```
 
 Visit `http://localhost:3000` and start analyzing your repositories!
+
+> **Note:** the GitHub OAuth scope is `public_repo`, so only public repositories (owned, collaborated-on, or via an org you're a member of) can be listed and analyzed - private repos won't appear in the picker.
 
 ## 🎯 Project Structure
 
@@ -176,7 +176,7 @@ All project settings are centralized in `nehua-config.json`:
 - [x] **Health Score System** - AI-powered scoring with category breakdown
 - [x] **Liquid Glass UI** - Modern glassmorphism with advanced animations
 - [x] **Report Generation** - Comprehensive exports with actionable insights
-- [x] **Interactive Features** - Node selection, path highlighting, explanations
+- [x] **Interactive Features** - Node selection, path highlighting
 - [x] **Demo Polish** - Error handling, analytics, performance optimization
 
 ## 📈 Demo Analytics
