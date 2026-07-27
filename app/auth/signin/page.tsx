@@ -52,7 +52,7 @@ export default function SignIn() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4 overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 overflow-hidden">
       {/* Enhanced background gradient mesh */}
       <div className="absolute inset-0 gradient-mesh" />
       
@@ -149,7 +149,7 @@ export default function SignIn() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="text-gray-600 mt-2"
+              className="text-gray-400 mt-2"
             >
               Autonomous Software Architecture Agent
             </motion.p>
@@ -162,7 +162,7 @@ export default function SignIn() {
             transition={{ delay: 0.8 }}
             className="space-y-4 mb-8"
           >
-            <div className="flex items-center space-x-3 text-sm text-gray-700 glass-card-hover p-3 rounded-xl">
+            <div className="flex items-center space-x-3 text-sm text-gray-200 glass-card-hover p-3 rounded-xl">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center relative overflow-hidden"
                    style={{ background: 'linear-gradient(135deg, #00DDFA, #007B8A)' }}>
                 <Github className="w-5 h-5 text-white relative z-10" />
@@ -171,7 +171,7 @@ export default function SignIn() {
               <span className="font-medium">Connect your GitHub repositories</span>
             </div>
             
-            <div className="flex items-center space-x-3 text-sm text-gray-700 glass-card-hover p-3 rounded-xl">
+            <div className="flex items-center space-x-3 text-sm text-gray-200 glass-card-hover p-3 rounded-xl">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center relative overflow-hidden"
                    style={{ background: 'linear-gradient(135deg, #FA0080, #B8005A)' }}>
                 <Brain className="w-5 h-5 text-white relative z-10" />
@@ -180,7 +180,7 @@ export default function SignIn() {
               <span className="font-medium">AI-powered architecture analysis</span>
             </div>
             
-            <div className="flex items-center space-x-3 text-sm text-gray-700 glass-card-hover p-3 rounded-xl">
+            <div className="flex items-center space-x-3 text-sm text-gray-200 glass-card-hover p-3 rounded-xl">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center relative overflow-hidden"
                    style={{ background: 'linear-gradient(135deg, #FADD00, #C7B400)' }}>
                 <Zap className="w-5 h-5 text-white relative z-10" />
@@ -221,7 +221,7 @@ export default function SignIn() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
-            className="text-xs text-gray-500 text-center mt-6"
+            className="text-xs text-gray-400 text-center mt-6"
           >
             We only access your public repositories
           </motion.p>

@@ -112,9 +112,9 @@ export function CustomEdge({
               className={`
                 px-2 py-1 rounded-full text-xs font-medium
                 backdrop-blur-sm border transition-all duration-200
-                ${isHighlighted 
-                  ? 'bg-white border-gray-300 shadow-lg' 
-                  : 'bg-white/80 border-gray-200'
+                ${isHighlighted
+                  ? 'bg-slate-800 border-white/30 shadow-lg'
+                  : 'bg-slate-900/80 border-white/10'
                 }
               `}
               style={{

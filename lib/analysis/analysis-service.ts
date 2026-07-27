@@ -105,12 +105,21 @@ export class AnalysisService {
 
         // AI Recommendations
         console.log('Generating AI recommendations...')
-        aiRecommendations = await geminiService.generateRecommendations(
+        const rawAiRecommendations = await geminiService.generateRecommendations(
           repository,
           aiHealthScore,
           riskAssessment.risks,
           this.config
         )
+        // Gemini's response never includes an id (the prompt doesn't ask for
+        // one), so without this every recommendation renders with the same
+        // undefined React key - which is exactly the "unique key" warning
+        // that was showing up, and unkeyed/duplicate-keyed list items can
+        // cause React to misattribute state/DOM between them on re-render.
+        aiRecommendations = rawAiRecommendations.map((rec: any, index: number) => ({
+          id: `rec-${index}`,
+          ...rec
+        }))
         llmCalls++
 
       } catch (aiError) {

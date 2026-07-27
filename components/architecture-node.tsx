@@ -34,7 +34,6 @@ interface ArchitectureNodeProps {
     risks?: string[]
     selected?: boolean
     onSelect?: () => void
-    onExplain?: () => void
   }
   selected?: boolean
 }
@@ -54,19 +53,23 @@ const nodeIcons: Record<NodeType, React.ComponentType<{ className?: string }>> =
   monitoring: Activity,
 }
 
+// Every node type gets a genuinely distinct color - the previous version
+// reused just 6 hex values across all 12 types (e.g. authentication and
+// backend were both #FA0080), so half the diagram always looked
+// monochrome regardless of how varied the detected architecture was.
 const nodeColors: Record<NodeType, { bg: string; border: string; glow: string }> = {
   frontend: { bg: '#00DDFA', border: '#00B8D4', glow: '0 0 20px rgba(0, 221, 250, 0.4)' },
   backend: { bg: '#FA0080', border: '#D5006D', glow: '0 0 20px rgba(250, 0, 128, 0.4)' },
   database: { bg: '#FADD00', border: '#E6C200', glow: '0 0 20px rgba(250, 221, 0, 0.4)' },
-  cache: { bg: '#A59837', border: '#8A7F2F', glow: '0 0 20px rgba(165, 152, 55, 0.4)' },
-  queue: { bg: '#7A3D5D', border: '#63334A', glow: '0 0 20px rgba(122, 61, 93, 0.4)' },
+  cache: { bg: '#FB923C', border: '#EA7C1E', glow: '0 0 20px rgba(251, 146, 60, 0.4)' },
+  queue: { bg: '#A855F7', border: '#9333EA', glow: '0 0 20px rgba(168, 85, 247, 0.4)' },
   storage: { bg: '#3D737A', border: '#335E66', glow: '0 0 20px rgba(61, 115, 122, 0.4)' },
-  authentication: { bg: '#FA0080', border: '#D5006D', glow: '0 0 20px rgba(250, 0, 128, 0.4)' },
-  cloud_service: { bg: '#00DDFA', border: '#00B8D4', glow: '0 0 20px rgba(0, 221, 250, 0.4)' },
-  ai_service: { bg: '#FADD00', border: '#E6C200', glow: '0 0 20px rgba(250, 221, 0, 0.4)' },
+  authentication: { bg: '#7A3D5D', border: '#63334A', glow: '0 0 20px rgba(122, 61, 93, 0.4)' },
+  cloud_service: { bg: '#38BDF8', border: '#0EA5E9', glow: '0 0 20px rgba(56, 189, 248, 0.4)' },
+  ai_service: { bg: '#10B981', border: '#059669', glow: '0 0 20px rgba(16, 185, 129, 0.4)' },
   external_api: { bg: '#A59837', border: '#8A7F2F', glow: '0 0 20px rgba(165, 152, 55, 0.4)' },
-  infrastructure: { bg: '#7A3D5D', border: '#63334A', glow: '0 0 20px rgba(122, 61, 93, 0.4)' },
-  monitoring: { bg: '#3D737A', border: '#335E66', glow: '0 0 20px rgba(61, 115, 122, 0.4)' },
+  infrastructure: { bg: '#64748B', border: '#475569', glow: '0 0 20px rgba(100, 116, 139, 0.4)' },
+  monitoring: { bg: '#F43F5E', border: '#E11D48', glow: '0 0 20px rgba(244, 63, 94, 0.4)' },
 }
 
 export function ArchitectureNode({ data, selected }: ArchitectureNodeProps) {
@@ -77,13 +80,6 @@ export function ArchitectureNode({ data, selected }: ArchitectureNodeProps) {
   const handleClick = () => {
     if (data.onSelect) {
       data.onSelect()
-    }
-  }
-
-  const handleExplainClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (data.onExplain) {
-      data.onExplain()
     }
   }
 
@@ -128,13 +124,16 @@ export function ArchitectureNode({ data, selected }: ArchitectureNodeProps) {
           delay: Math.random() * 0.5 
         }}
       >
-        {/* Node container */}
+        {/* Node container - fixed size, matching the dimensions the diagram's
+            dagre layout is computed against (see NODE_WIDTH/NODE_HEIGHT in
+            architecture-diagram.tsx). Variable-height cards there caused the
+            layout engine to under-reserve vertical space and overlap rows. */}
         <div
           className={`
-            relative min-w-[180px] max-w-[240px] rounded-xl 
-            backdrop-blur-md border-2 transition-all duration-300
-            ${isSelected 
-              ? 'ring-4 ring-white ring-opacity-30' 
+            relative w-[240px] h-[170px] flex flex-col rounded-xl
+            backdrop-blur-md border-2 transition-all duration-300 overflow-hidden
+            ${isSelected
+              ? 'ring-4 ring-white ring-opacity-30'
               : 'hover:shadow-xl'
             }
           `}
@@ -145,8 +144,8 @@ export function ArchitectureNode({ data, selected }: ArchitectureNodeProps) {
           }}
         >
           {/* Header */}
-          <div 
-            className="p-3 rounded-t-xl flex items-center space-x-3"
+          <div
+            className="p-3 rounded-t-xl flex items-center space-x-3 flex-shrink-0"
             style={{ backgroundColor: `${colors.bg}25` }}
           >
             <div 
@@ -157,10 +156,10 @@ export function ArchitectureNode({ data, selected }: ArchitectureNodeProps) {
             </div>
             
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 truncate text-sm">
+              <h3 className="font-semibold text-white truncate text-sm">
                 {data.label}
               </h3>
-              <p className="text-xs text-gray-600 capitalize">
+              <p className="text-xs text-gray-300 capitalize">
                 {data.type.replace('_', ' ')}
               </p>
             </div>
@@ -182,14 +181,14 @@ export function ArchitectureNode({ data, selected }: ArchitectureNodeProps) {
           </div>
 
           {/* Content */}
-          <div className="p-3 space-y-2">
+          <div className="p-3 space-y-2 flex-1 overflow-hidden min-h-0">
             {/* Description */}
-            <p className="text-xs text-gray-700 line-clamp-2 leading-relaxed">
+            <p className="text-xs text-gray-300 line-clamp-2 leading-relaxed">
               {data.description}
             </p>
 
             {/* Stats */}
-            <div className="flex items-center justify-between text-xs text-gray-500">
+            <div className="flex items-center justify-between text-xs text-gray-400">
               {data.files && (
                 <span className="flex items-center space-x-1">
                   <FileCode className="w-3 h-3" />
@@ -214,33 +213,14 @@ export function ArchitectureNode({ data, selected }: ArchitectureNodeProps) {
 
             {/* Exports preview */}
             {data.exports && data.exports.length > 0 && (
-              <div className="text-xs">
-                <span className="text-gray-600">Exports: </span>
-                <span className="text-gray-800 font-medium">
+              <div className="text-xs truncate">
+                <span className="text-gray-400">Exports: </span>
+                <span className="text-gray-100 font-medium">
                   {data.exports.slice(0, 2).join(', ')}
                   {data.exports.length > 2 && ` +${data.exports.length - 2} more`}
                 </span>
               </div>
             )}
-          </div>
-
-          {/* Actions */}
-          <div className="px-3 pb-3">
-            <button
-              onClick={handleExplainClick}
-              className={`
-                w-full py-2 px-3 rounded-lg text-xs font-medium 
-                transition-all duration-200 
-                hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-opacity-50
-              `}
-              style={{
-                backgroundColor: colors.bg,
-                color: 'white',
-                '--tw-ring-color': colors.border
-              } as React.CSSProperties}
-            >
-              Explain Component
-            </button>
           </div>
 
           {/* Selection indicator */}

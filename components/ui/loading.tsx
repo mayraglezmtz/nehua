@@ -47,7 +47,7 @@ export function LoadingSpinner({
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className={`${textSizeClasses[size]} text-gray-600 text-center`}
+            className={`${textSizeClasses[size]} text-gray-400 text-center`}
           >
             {text}
           </motion.p>
@@ -94,7 +94,7 @@ export function LoadingSpinner({
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className={`${textSizeClasses[size]} text-gray-600 text-center`}
+            className={`${textSizeClasses[size]} text-gray-400 text-center`}
           >
             {text}
           </motion.p>
@@ -118,7 +118,7 @@ export function LoadingSpinner({
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className={`${textSizeClasses[size]} text-gray-600`}
+          className={`${textSizeClasses[size]} text-gray-400`}
         >
           {text}
         </motion.p>
@@ -147,7 +147,7 @@ export function LoadingOverlay({
       exit={{ opacity: 0 }}
       className={`
         fixed inset-0 z-50 flex items-center justify-center
-        ${variant === 'glass' ? 'glass-overlay' : 'bg-white/80 backdrop-blur-sm'}
+        ${variant === 'glass' ? 'glass-overlay' : 'bg-slate-950/80 backdrop-blur-sm'}
       `}
     >
       <LoadingSpinner 
@@ -170,7 +170,7 @@ export function Skeleton({
   variant = 'rectangle', 
   animate = true 
 }: SkeletonProps) {
-  const baseClasses = 'bg-gray-200 rounded'
+  const baseClasses = 'bg-white/10 rounded'
   
   const variantClasses = {
     text: 'h-4 w-full',

@@ -29,9 +29,9 @@ function AuthErrorContent() {
   const errorMessage = error ? errorMessages[error] || errorMessages.Default : errorMessages.Default
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50" />
+      <div className="absolute inset-0 bg-gradient-to-br from-red-950/40 via-orange-950/20 to-transparent" />
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -54,16 +54,16 @@ function AuthErrorContent() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-2xl font-bold text-gray-900 mb-4"
+            className="text-2xl font-bold text-white mb-4"
           >
             Authentication Error
           </motion.h1>
-          
+
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="text-gray-600 mb-8"
+            className="text-gray-300 mb-8"
           >
             {errorMessage}
           </motion.p>

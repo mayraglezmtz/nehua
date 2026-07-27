@@ -47,18 +47,18 @@ export class DemoErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="min-h-screen flex items-center justify-center p-4">
           <div className="glass-panel p-8 max-w-md text-center">
             <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
+            <h2 className="text-xl font-bold text-white mb-2">
               Demo Encountered an Issue
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-300 mb-6">
               Don't worry! This is just a demo hiccup. Let's get you back on track.
             </p>
-            
+
             {process.env.NODE_ENV === 'development' && (
-              <details className="text-left mb-4 p-3 bg-red-50 rounded-lg text-sm">
+              <details className="text-left mb-4 p-3 bg-red-950/30 border border-red-500/20 rounded-lg text-sm text-gray-300">
                 <summary className="font-medium cursor-pointer">Technical Details</summary>
                 <pre className="mt-2 text-xs overflow-auto">
                   {this.state.error?.stack}

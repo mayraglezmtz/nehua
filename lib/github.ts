@@ -120,41 +120,38 @@ export async function detectFramework(
   }
 
   try {
-    // Check for key files that indicate specific frameworks. Every
-    // (framework, file) pair is probed concurrently instead of sequentially
-    // to avoid a multi-second, rate-limit-heavy detection step.
-    const checks = Object.entries(frameworks).flatMap(([frameworkKey, frameworkConfig]) =>
-      (frameworkConfig.key_files as string[]).map(file => ({ frameworkKey, file }))
+    // Fetch the repo's full file listing ONCE and match every framework's
+    // key_files against it locally, instead of firing one Contents-API
+    // request per candidate file. The latter (13-16 concurrent requests per
+    // repo, times every repo on the page) is what was tripping GitHub's
+    // secondary/abuse rate limit (403) when the repository list loads.
+    const treeResponse = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/git/trees/HEAD?recursive=1`,
+      {
+        headers: {
+          'Authorization': `token ${accessToken}`,
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      }
     )
 
-    const results = await Promise.all(
-      checks.map(async ({ frameworkKey, file }) => {
-        try {
-          const response = await fetch(
-            `https://api.github.com/repos/${owner}/${repo}/contents/${file}`,
-            {
-              headers: {
-                'Authorization': `token ${accessToken}`,
-                'Accept': 'application/vnd.github.v3+json',
-              },
-            }
-          )
+    if (treeResponse.ok) {
+      const treeData = await treeResponse.json()
+      const paths: string[] = Array.isArray(treeData.tree)
+        ? treeData.tree.filter((item: any) => item.type === 'blob').map((item: any) => item.path as string)
+        : []
 
-          return response.ok ? { frameworkKey, file } : null
-        } catch (error) {
-          return null
+      for (const [frameworkKey, frameworkConfig] of Object.entries(frameworks)) {
+        const keyFiles = frameworkConfig.key_files as string[]
+        const matchedFile = paths.find(path => keyFiles.some(keyFile => path === keyFile || path.endsWith(`/${keyFile}`)))
+
+        if (matchedFile) {
+          return {
+            framework: frameworkKey,
+            confidence: 0.9,
+            evidence: [matchedFile]
+          }
         }
-      })
-    )
-
-    const detected = results.find(
-      (result): result is { frameworkKey: string; file: string } => result !== null
-    )
-    if (detected) {
-      return {
-        framework: detected.frameworkKey,
-        confidence: 0.9,
-        evidence: [detected.file]
       }
     }
 

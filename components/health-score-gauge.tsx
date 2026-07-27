@@ -116,7 +116,7 @@ export function HealthScoreGauge({
               cx={config.gauge / 2}
               cy={config.gauge / 2}
               r={radius}
-              stroke="#e5e7eb"
+              stroke="#334155"
               strokeWidth={config.stroke}
               fill="none"
             />
@@ -157,7 +157,7 @@ export function HealthScoreGauge({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.2 }}
-              className={`${config.subtext} text-gray-600 capitalize`}
+              className={`${config.subtext} text-gray-400 capitalize`}
             >
               {overallConfig.status}
             </motion.div>
@@ -187,7 +187,7 @@ export function HealthScoreGauge({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.8 }}
-            className="text-center text-sm text-gray-600 mt-4 max-w-xs"
+            className="text-center text-sm text-gray-400 mt-4 max-w-xs"
           >
             {reasoning.overall}
           </motion.p>
@@ -228,7 +228,7 @@ export function HealthScoreGauge({
                         cx={config.categorySize / 2}
                         cy={config.categorySize / 2}
                         r={categoryRadius}
-                        stroke="#e5e7eb"
+                        stroke="#334155"
                         strokeWidth={config.categoryStroke}
                         fill="none"
                       />
@@ -260,7 +260,7 @@ export function HealthScoreGauge({
                   {/* Category details */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium text-gray-900 truncate">
+                      <h4 className="text-sm font-medium text-white truncate">
                         {category.label}
                       </h4>
                       <span 
@@ -272,7 +272,7 @@ export function HealthScoreGauge({
                     </div>
                     
                     {reasoning[category.key as keyof typeof reasoning] && (
-                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                      <p className="text-xs text-gray-400 mt-1 line-clamp-2">
                         {reasoning[category.key as keyof typeof reasoning]}
                       </p>
                     )}
@@ -288,7 +288,7 @@ export function HealthScoreGauge({
                   ) : (
                     <TrendingDown className="w-3 h-3 text-red-500" />
                   )}
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-400">
                     {category.score >= 80 ? 'Excellent' : 
                      category.score >= 60 ? 'Needs attention' : 'Critical'}
                   </span>

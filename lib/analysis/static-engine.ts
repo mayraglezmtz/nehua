@@ -83,9 +83,9 @@ export class StaticAnalysisEngine {
     context: AnalysisContext
   ): Promise<any> {
     // Add common analysis patterns that apply to all frameworks
-    const enhancedNodes = await this.detectCommonNodes(result.nodes, context)
+    const enhancedNodes = await this.detectCommonNodes(result.nodes, result.dependencies || [], context)
     const enhancedEdges = await this.detectDataFlows(result.edges, enhancedNodes)
-    
+
     return {
       ...result,
       nodes: enhancedNodes,
@@ -95,21 +95,22 @@ export class StaticAnalysisEngine {
 
   private async detectCommonNodes(
     nodes: ArchitectureNode[],
+    dependencies: string[],
     context: AnalysisContext
   ): Promise<ArchitectureNode[]> {
     const enhancedNodes = [...nodes]
-    
+
     // Detect common infrastructure patterns
     const files = await this.fetchRepositoryStructure(context)
-    
+
     // Look for database configurations
-    const dbFiles = files.filter(f => 
+    const dbFiles = files.filter(f =>
       f.toLowerCase().includes('database') ||
       f.toLowerCase().includes('db') ||
       f.toLowerCase().includes('.sql') ||
       f.toLowerCase().includes('migrate')
     )
-    
+
     if (dbFiles.length > 0) {
       enhancedNodes.push(this.createNode('database', 'Database', 'Data persistence layer', dbFiles))
     }
@@ -120,7 +121,7 @@ export class StaticAnalysisEngine {
       f.toLowerCase().includes('redis') ||
       f.toLowerCase().includes('memcache')
     )
-    
+
     if (cacheFiles.length > 0) {
       enhancedNodes.push(this.createNode('cache', 'Cache Layer', 'Caching system', cacheFiles))
     }
@@ -132,9 +133,110 @@ export class StaticAnalysisEngine {
       f.toLowerCase().includes('jwt') ||
       f.toLowerCase().includes('oauth')
     )
-    
+
     if (authFiles.length > 0) {
       enhancedNodes.push(this.createNode('authentication', 'Authentication', 'Auth system', authFiles))
+    }
+
+    // Look for task queues / background job systems (Celery, RQ, Dramatiq,
+    // BullMQ, ...). Detected via both dependency names and conventional
+    // filenames since manifests aren't always fetched by every analyzer.
+    const queueDependencyNames = ['celery', 'django-celery-beat', 'django-celery-results', 'kombu', 'rq', 'dramatiq', 'bullmq', 'bull']
+    const matchedQueueDependency = dependencies.find(dep => queueDependencyNames.includes(dep))
+
+    const queueFiles = files.filter(f => {
+      const lower = f.toLowerCase()
+      return lower.endsWith('celery.py') ||
+        lower.endsWith('celeryconfig.py') ||
+        lower.endsWith('celery_app.py') ||
+        lower.endsWith('tasks.py') ||
+        lower.endsWith('worker.py')
+    })
+
+    if (matchedQueueDependency || queueFiles.length > 0) {
+      const systemName = matchedQueueDependency?.startsWith('celery') || matchedQueueDependency?.includes('celery')
+        ? 'Celery'
+        : matchedQueueDependency === 'rq' ? 'RQ'
+        : matchedQueueDependency === 'dramatiq' ? 'Dramatiq'
+        : matchedQueueDependency?.includes('bull') ? 'BullMQ'
+        : queueFiles.some(f => f.toLowerCase().includes('celery')) ? 'Celery'
+        : 'a background task queue'
+
+      enhancedNodes.push(this.createNode(
+        'queue',
+        'Task Queue',
+        `Asynchronous background job processing via ${systemName}`,
+        queueFiles
+      ))
+    }
+
+    // Remaining node types are detected generically by dependency name
+    // (primary signal - config manifests are more reliable than filenames
+    // for these) with an optional filename fallback.
+    const signalRules: Array<{
+      type: NodeType
+      label: string
+      describe: (match: string) => string
+      dependencyNames: string[]
+      fileMatcher?: (path: string) => boolean
+    }> = [
+      {
+        type: 'storage',
+        label: 'Object Storage',
+        describe: (match) => `File/object storage via ${match}`,
+        dependencyNames: ['django-storages', '@aws-sdk/client-s3', 'google-cloud-storage', '@google-cloud/storage', 'azure-storage-blob', 'minio']
+      },
+      {
+        type: 'cloud_service',
+        label: 'Cloud Platform',
+        describe: (match) => `Cloud provider integration via ${match}`,
+        dependencyNames: ['boto3', 'aws-sdk', '@aws-sdk/client-lambda', 'firebase-admin', 'firebase', '@google-cloud/functions-framework', '@azure/functions']
+      },
+      {
+        type: 'ai_service',
+        label: 'AI Service',
+        describe: (match) => `AI/LLM provider integration via ${match}`,
+        dependencyNames: ['openai', 'anthropic', '@anthropic-ai/sdk', 'google-generativeai', '@google/generative-ai', 'langchain', 'langchain-core', 'llama-index', 'cohere', 'replicate', 'transformers']
+      },
+      {
+        type: 'external_api',
+        label: 'External API',
+        describe: (match) => `Third-party API integration via ${match}`,
+        dependencyNames: ['stripe', 'twilio', 'sendgrid', '@sendgrid/mail', 'paypal-rest-sdk', 'braintree', 'plaid', 'algoliasearch']
+      },
+      {
+        type: 'infrastructure',
+        label: 'Infrastructure',
+        describe: () => 'Container/deployment configuration',
+        dependencyNames: [],
+        fileMatcher: (f) => {
+          const lower = f.toLowerCase()
+          return lower === 'dockerfile' || lower.endsWith('/dockerfile') ||
+            lower.endsWith('docker-compose.yml') || lower.endsWith('docker-compose.yaml') ||
+            lower.endsWith('.tf') ||
+            lower.startsWith('k8s/') || lower.startsWith('kubernetes/')
+        }
+      },
+      {
+        type: 'monitoring',
+        label: 'Monitoring',
+        describe: (match) => `Observability/error-tracking via ${match}`,
+        dependencyNames: ['sentry-sdk', '@sentry/node', '@sentry/nextjs', '@sentry/react', 'dd-trace', 'newrelic', 'prom-client', '@opentelemetry/api']
+      }
+    ]
+
+    for (const rule of signalRules) {
+      const matchedDependency = dependencies.find(dep => rule.dependencyNames.includes(dep))
+      const matchedFiles = rule.fileMatcher ? files.filter(rule.fileMatcher) : []
+
+      if (matchedDependency || matchedFiles.length > 0) {
+        enhancedNodes.push(this.createNode(
+          rule.type,
+          rule.label,
+          rule.describe(matchedDependency || rule.label),
+          matchedFiles
+        ))
+      }
     }
 
     return enhancedNodes
@@ -150,7 +252,9 @@ export class StaticAnalysisEngine {
     const frontendNodes = nodes.filter(n => n.type === 'frontend')
     const backendNodes = nodes.filter(n => n.type === 'backend')
     const databaseNodes = nodes.filter(n => n.type === 'database')
-    
+    const cacheNodes = nodes.filter(n => n.type === 'cache')
+    const queueNodes = nodes.filter(n => n.type === 'queue')
+
     // Connect frontend to backend
     frontendNodes.forEach(frontend => {
       backendNodes.forEach(backend => {
@@ -183,6 +287,72 @@ export class StaticAnalysisEngine {
             stroke: this.config.ui.colors.accent,
             strokeWidth: 2
           }
+        })
+      })
+    })
+
+    // Connect backend to cache
+    backendNodes.forEach(backend => {
+      cacheNodes.forEach(cache => {
+        enhancedEdges.push({
+          id: `${backend.id}-${cache.id}`,
+          source: backend.id,
+          target: cache.id,
+          type: 'dependency',
+          label: 'Caches',
+          animated: false,
+          style: {
+            stroke: this.config.node_types.cache.color,
+            strokeWidth: 2
+          }
+        })
+      })
+    })
+
+    // Connect backend to task queue
+    backendNodes.forEach(backend => {
+      queueNodes.forEach(queue => {
+        enhancedEdges.push({
+          id: `${backend.id}-${queue.id}`,
+          source: backend.id,
+          target: queue.id,
+          type: 'dependency',
+          label: 'Enqueues Jobs',
+          animated: true,
+          style: {
+            stroke: this.config.node_types.queue.color,
+            strokeWidth: 2
+          }
+        })
+      })
+    })
+
+    // Connect backend to the remaining outbound-integration node types
+    // (storage, external APIs, AI services, cloud platform, monitoring)
+    const outboundConnections: Array<{ type: NodeType; label: string }> = [
+      { type: 'storage', label: 'Reads/Writes Files' },
+      { type: 'external_api', label: 'Calls API' },
+      { type: 'ai_service', label: 'Requests Inference' },
+      { type: 'cloud_service', label: 'Uses Service' },
+      { type: 'monitoring', label: 'Reports Metrics' }
+    ]
+
+    outboundConnections.forEach(({ type, label }) => {
+      const targetNodes = nodes.filter(n => n.type === type)
+      backendNodes.forEach(backend => {
+        targetNodes.forEach(target => {
+          enhancedEdges.push({
+            id: `${backend.id}-${target.id}`,
+            source: backend.id,
+            target: target.id,
+            type: 'dependency',
+            label,
+            animated: type === 'ai_service' || type === 'external_api',
+            style: {
+              stroke: this.config.node_types[type].color,
+              strokeWidth: 2
+            }
+          })
         })
       })
     })
@@ -357,6 +527,31 @@ class DjangoAnalyzer implements FrameworkAnalyzer {
       })
     }
 
+    // Django server-renders its own UI via templates/static assets - for a
+    // classic monolith (no separate SPA), this IS the frontend layer, and
+    // without it the diagram shows nothing but backend boxes.
+    const structure = await this.fetchRepositoryStructure(context)
+    const templateFiles = structure.filter(f => {
+      const lower = f.toLowerCase()
+      return lower.includes('/templates/') || lower.endsWith('.html')
+    })
+    const staticFiles = structure.filter(f => f.toLowerCase().includes('/static/'))
+
+    if (templateFiles.length > 0 || staticFiles.length > 0) {
+      nodes.push({
+        id: 'django-templates',
+        type: 'frontend',
+        label: 'Django Templates',
+        description: 'Server-rendered HTML templates and static assets - the UI layer of this Django monolith',
+        position: { x: 200, y: 0 },
+        data: {
+          files: [...templateFiles, ...staticFiles].slice(0, 20),
+          dependencies: [],
+          exports: ['Rendered Pages', 'Static Assets'],
+        }
+      })
+    }
+
     return nodes
   }
 
@@ -429,7 +624,7 @@ class DjangoAnalyzer implements FrameworkAnalyzer {
     return risks
   }
 
-  private async fetchFileContent(context: AnalysisContext, fileName: string): Promise<string | null> {
+  private async fetchFileContent(context: AnalysisContext, fileName: string, attempt = 0): Promise<string | null> {
     try {
       const response = await fetch(
         `https://api.github.com/repos/${context.repository.full_name}/contents/${fileName}`,
@@ -441,11 +636,22 @@ class DjangoAnalyzer implements FrameworkAnalyzer {
         }
       )
 
-      if (!response.ok) return null
+      if (!response.ok) {
+        // Don't retry a real 404 - only transient failures are worth a
+        // second attempt (a single dropped request previously meant a
+        // whole node - e.g. Django Models - silently vanished).
+        if (response.status !== 404 && attempt === 0) {
+          return this.fetchFileContent(context, fileName, attempt + 1)
+        }
+        return null
+      }
 
       const data = await response.json()
       return atob(data.content.replace(/\s/g, ''))
     } catch (error) {
+      if (attempt === 0) {
+        return this.fetchFileContent(context, fileName, attempt + 1)
+      }
       return null
     }
   }

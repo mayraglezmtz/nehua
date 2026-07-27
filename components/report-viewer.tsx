@@ -116,10 +116,10 @@ export function ReportViewer({ analysisResult, isOpen, onClose }: ReportViewerPr
   }
 
   const formatScore = (score: number) => {
-    if (score >= 80) return { color: 'text-green-600', bg: 'bg-green-100', label: 'Excellent' }
-    if (score >= 60) return { color: 'text-yellow-600', bg: 'bg-yellow-100', label: 'Good' }
-    if (score >= 40) return { color: 'text-orange-600', bg: 'bg-orange-100', label: 'Fair' }
-    return { color: 'text-red-600', bg: 'bg-red-100', label: 'Poor' }
+    if (score >= 80) return { color: 'text-green-400', bg: 'bg-green-500/10', label: 'Excellent' }
+    if (score >= 60) return { color: 'text-yellow-400', bg: 'bg-yellow-500/10', label: 'Good' }
+    if (score >= 40) return { color: 'text-orange-400', bg: 'bg-orange-500/10', label: 'Fair' }
+    return { color: 'text-red-400', bg: 'bg-red-500/10', label: 'Poor' }
   }
 
   if (!isOpen) return null
@@ -145,10 +145,10 @@ export function ReportViewer({ analysisResult, isOpen, onClose }: ReportViewerPr
             <div className="flex items-center space-x-3">
               <FileText className="w-6 h-6 text-nehua-primary" />
               <div>
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-white">
                   Architecture Report
                 </h2>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-300">
                   {analysisResult.repository.name}
                 </p>
               </div>
@@ -160,7 +160,7 @@ export function ReportViewer({ analysisResult, isOpen, onClose }: ReportViewerPr
                   <select
                     value={exportFormat}
                     onChange={(e) => setExportFormat(e.target.value as any)}
-                    className="glass-input px-3 py-2 text-sm border-0 rounded-lg"
+                    className="glass-input px-3 py-2 text-sm text-white border-0 rounded-lg"
                   >
                     <option value="markdown">Markdown</option>
                     <option value="json">JSON</option>
@@ -209,10 +209,10 @@ export function ReportViewer({ analysisResult, isOpen, onClose }: ReportViewerPr
                   <div className="text-center space-y-4">
                     <FileText className="w-16 h-16 text-gray-400 mx-auto" />
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      <h3 className="text-lg font-semibold text-white mb-2">
                         Generate Architecture Report
                       </h3>
-                      <p className="text-gray-600 mb-6 max-w-md">
+                      <p className="text-gray-300 mb-6 max-w-md">
                         Create a comprehensive analysis report with detailed insights, 
                         recommendations, and action plans.
                       </p>
@@ -242,31 +242,31 @@ export function ReportViewer({ analysisResult, isOpen, onClose }: ReportViewerPr
                       <div className={`text-3xl font-bold mb-2 ${formatScore(report.executiveSummary.overallHealth).color}`}>
                         {report.executiveSummary.overallHealth}
                       </div>
-                      <div className="text-sm text-gray-600">Overall Health</div>
+                      <div className="text-sm text-gray-300">Overall Health</div>
                     </div>
                     <div className="glass-card p-4 text-center">
                       <div className="text-3xl font-bold text-nehua-secondary mb-2">
                         {report.architectureOverview.componentsCount}
                       </div>
-                      <div className="text-sm text-gray-600">Components</div>
+                      <div className="text-sm text-gray-300">Components</div>
                     </div>
                     <div className="glass-card p-4 text-center">
                       <div className="text-3xl font-bold text-nehua-accent mb-2">
                         {report.riskAssessment.riskMatrix.high + report.riskAssessment.riskMatrix.medium}
                       </div>
-                      <div className="text-sm text-gray-600">Active Risks</div>
+                      <div className="text-sm text-gray-300">Active Risks</div>
                     </div>
                     <div className="glass-card p-4 text-center">
                       <div className="text-3xl font-bold text-nehua-primary mb-2">
                         {report.recommendations.immediate.length + report.recommendations.shortTerm.length}
                       </div>
-                      <div className="text-sm text-gray-600">Recommendations</div>
+                      <div className="text-sm text-gray-300">Recommendations</div>
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-semibold text-gray-900 mb-2">Key Findings</h4>
+                      <h4 className="font-semibold text-white mb-2">Key Findings</h4>
                       <ul className="space-y-1">
                         {report.executiveSummary.keyFindings.map((finding, index) => (
                           <li key={index} className="flex items-start space-x-2 text-sm">
@@ -280,7 +280,7 @@ export function ReportViewer({ analysisResult, isOpen, onClose }: ReportViewerPr
                     {report.executiveSummary.criticalIssues.length > 0 && 
                      report.executiveSummary.criticalIssues[0] !== 'No critical issues identified' && (
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
+                        <h4 className="font-semibold text-white mb-2 flex items-center">
                           <AlertTriangle className="w-4 h-4 text-red-500 mr-2" />
                           Critical Issues
                         </h4>
@@ -318,13 +318,13 @@ export function ReportViewer({ analysisResult, isOpen, onClose }: ReportViewerPr
                               {data.score}/100
                             </div>
                           </div>
-                          <p className="text-sm text-gray-600 mb-3">{data.reasoning}</p>
+                          <p className="text-sm text-gray-300 mb-3">{data.reasoning}</p>
                           {data.issues.length > 0 && data.issues[0] !== 'No major issues identified' && (
                             <div>
-                              <h5 className="text-xs font-medium text-gray-700 mb-1">Issues:</h5>
+                              <h5 className="text-xs font-medium text-gray-300 mb-1">Issues:</h5>
                               <ul className="space-y-1">
                                 {data.issues.map((issue, index) => (
-                                  <li key={index} className="text-xs text-gray-600 flex items-start space-x-1">
+                                  <li key={index} className="text-xs text-gray-300 flex items-start space-x-1">
                                     <span className="w-1 h-1 bg-red-500 rounded-full mt-2 flex-shrink-0" />
                                     <span>{issue}</span>
                                   </li>
@@ -347,7 +347,7 @@ export function ReportViewer({ analysisResult, isOpen, onClose }: ReportViewerPr
                   onToggle={() => toggleSection('risks')}
                 >
                   <div className="mb-6">
-                    <p className="text-gray-600 mb-4">{report.riskAssessment.summary}</p>
+                    <p className="text-gray-300 mb-4">{report.riskAssessment.summary}</p>
                     
                     <div className="flex items-center space-x-6">
                       <div className="flex items-center space-x-2">
@@ -368,7 +368,7 @@ export function ReportViewer({ analysisResult, isOpen, onClose }: ReportViewerPr
                   {Object.entries(report.riskAssessment.risksByCategory).map(([category, risks]) => (
                     risks.length > 0 && (
                       <div key={category} className="mb-6">
-                        <h4 className="font-semibold capitalize text-gray-900 mb-3 flex items-center">
+                        <h4 className="font-semibold capitalize text-white mb-3 flex items-center">
                           <Shield className="w-4 h-4 mr-2" />
                           {category} Risks ({risks.length})
                         </h4>
@@ -376,19 +376,19 @@ export function ReportViewer({ analysisResult, isOpen, onClose }: ReportViewerPr
                           {risks.map((risk, index) => (
                             <div key={index} className="glass-card p-4">
                               <div className="flex items-start justify-between mb-2">
-                                <h5 className="font-medium text-gray-900">{risk.title}</h5>
+                                <h5 className="font-medium text-white">{risk.title}</h5>
                                 <span className={`px-2 py-1 text-xs rounded-full ${
-                                  risk.severity === 'high' ? 'bg-red-100 text-red-800' :
-                                  risk.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
+                                  risk.severity === 'high' ? 'bg-red-500/10 text-red-400' :
+                                  risk.severity === 'medium' ? 'bg-yellow-500/10 text-yellow-400' :
+                                  'bg-white/10 text-gray-300'
                                 }`}>
                                   {risk.severity}
                                 </span>
                               </div>
-                              <p className="text-sm text-gray-600 mb-3">{risk.description}</p>
+                              <p className="text-sm text-gray-300 mb-3">{risk.description}</p>
                               <div className="text-sm">
-                                <span className="font-medium text-gray-700">Recommendation: </span>
-                                <span className="text-gray-600">{risk.recommendation}</span>
+                                <span className="font-medium text-gray-300">Recommendation: </span>
+                                <span className="text-gray-300">{risk.recommendation}</span>
                               </div>
                             </div>
                           ))}
@@ -454,12 +454,12 @@ function ReportSection({ id, title, icon, children, isExpanded, onToggle }: Repo
       >
         <div className="flex items-center space-x-3">
           {icon}
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+          <h3 className="text-lg font-semibold text-white">{title}</h3>
         </div>
         {isExpanded ? (
-          <ChevronDown className="w-5 h-5 text-gray-600" />
+          <ChevronDown className="w-5 h-5 text-gray-300" />
         ) : (
-          <ChevronRight className="w-5 h-5 text-gray-600" />
+          <ChevronRight className="w-5 h-5 text-gray-300" />
         )}
       </button>
       
@@ -491,29 +491,29 @@ interface ActionPhaseProps {
 
 function ActionPhase({ title, icon, actions, color }: ActionPhaseProps) {
   const colorClasses = {
-    red: 'border-red-200 bg-red-50',
-    yellow: 'border-yellow-200 bg-yellow-50',
-    green: 'border-green-200 bg-green-50'
+    red: 'border-red-500/30 bg-red-950/30',
+    yellow: 'border-yellow-500/30 bg-yellow-950/20',
+    green: 'border-green-500/30 bg-green-950/20'
   }
 
   return (
     <div className={`glass-card border-l-4 ${colorClasses[color]}`}>
       <div className="flex items-center space-x-3 mb-4">
         {icon}
-        <h4 className="font-semibold text-gray-900">{title}</h4>
+        <h4 className="font-semibold text-white">{title}</h4>
       </div>
       
       <div className="space-y-3">
         {actions.map((action, index) => (
           <div key={index} className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="font-medium text-sm text-gray-900">{action.task}</p>
+              <p className="font-medium text-sm text-white">{action.task}</p>
               <div className="flex items-center space-x-4 mt-1">
-                <span className="text-xs text-gray-600 flex items-center">
+                <span className="text-xs text-gray-300 flex items-center">
                   <Calendar className="w-3 h-3 mr-1" />
                   {action.timeline}
                 </span>
-                <span className="text-xs text-gray-600 flex items-center">
+                <span className="text-xs text-gray-300 flex items-center">
                   <Users className="w-3 h-3 mr-1" />
                   {action.owner}
                 </span>

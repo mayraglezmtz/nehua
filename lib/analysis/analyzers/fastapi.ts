@@ -181,17 +181,17 @@ export class FastAPIAnalyzer implements FrameworkAnalyzer {
       })
     }
 
-    if (dependencies.includes('redis') || dependencies.includes('celery')) {
+    if (dependencies.includes('redis')) {
       nodes.push({
         id: 'fastapi-cache',
         type: 'cache',
-        label: 'Cache/Queue',
-        description: 'Redis caching and background task processing',
+        label: 'Redis Cache',
+        description: 'Redis-backed caching layer',
         position: { x: 350, y: 400 },
         data: {
           files: [],
           dependencies: ['redis'],
-          exports: ['Cache Operations', 'Background Tasks']
+          exports: ['Cache Operations']
         },
         style: {
           backgroundColor: nodeConfig.cache.color,
@@ -200,6 +200,8 @@ export class FastAPIAnalyzer implements FrameworkAnalyzer {
         }
       })
     }
+    // Celery / task-queue detection is handled generically for all
+    // frameworks by the cross-cutting pass in static-engine.ts.
 
     return nodes
   }

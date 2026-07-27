@@ -23,7 +23,7 @@ export default function Home() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -36,7 +36,7 @@ export default function Home() {
           >
             <Loader2 className="w-8 h-8 text-nehua-primary" />
           </motion.div>
-          <p className="text-gray-600">Loading Nehua...</p>
+          <p className="text-gray-400">Loading Nehua...</p>
         </motion.div>
       </div>
     )
@@ -45,12 +45,12 @@ export default function Home() {
   if (session) {
     // This will rarely show as we redirect immediately, but good for debugging
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold gradient-text mb-4">
             Redirecting to Repository Selection...
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-400">
             Welcome, {session.user?.name}!
           </p>
         </div>

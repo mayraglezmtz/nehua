@@ -72,10 +72,10 @@ export function RepositoryCard({
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-nehua-primary transition-colors">
+            <h3 className="text-lg font-semibold text-white truncate group-hover:text-nehua-primary transition-colors">
               {repository.name}
             </h3>
-            <p className="text-sm text-gray-500 truncate">
+            <p className="text-sm text-gray-400 truncate">
               {repository.full_name}
             </p>
           </div>
@@ -97,13 +97,13 @@ export function RepositoryCard({
 
         {/* Description */}
         {repository.description && (
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2 leading-relaxed">
+          <p className="text-sm text-gray-300 mb-4 line-clamp-2 leading-relaxed">
             {repository.description}
           </p>
         )}
 
         {/* Stats */}
-        <div className="flex items-center space-x-4 mb-4 text-xs text-gray-500">
+        <div className="flex items-center space-x-4 mb-4 text-xs text-gray-400">
           {repository.language && (
             <div className="flex items-center space-x-1">
               <div 
@@ -127,12 +127,12 @@ export function RepositoryCard({
 
         {/* Size indicator */}
         <div className="flex items-center justify-between">
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-gray-400">
             {(repository.size / 1024).toFixed(1)} MB
           </div>
-          
+
           {framework && (
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-400">
               {Math.round(framework.confidence * 100)}% confidence
             </div>
           )}

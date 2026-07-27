@@ -234,10 +234,10 @@ export default function RepositorySelection() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 text-nehua-primary animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading session...</p>
+          <p className="text-gray-400">Loading session...</p>
         </div>
       </div>
     )
@@ -246,9 +246,9 @@ export default function RepositorySelection() {
   if (!session) return null
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-white/10 bg-slate-950/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -261,7 +261,7 @@ export default function RepositorySelection() {
             </div>
 
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 text-sm text-gray-300">
                 <User className="w-4 h-4" />
                 <span>{session.user?.name}</span>
               </div>
@@ -269,7 +269,7 @@ export default function RepositorySelection() {
                 variant="ghost"
                 size="sm"
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="text-gray-600 hover:text-gray-800"
+                className="text-gray-300 hover:text-gray-100"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign out
@@ -291,11 +291,11 @@ export default function RepositorySelection() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl font-bold text-white mb-4">
             Select Repository for Analysis
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Choose a public repository from your GitHub account to analyze its architecture, 
+          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+            Choose a public repository from your GitHub account to analyze its architecture,
             generate insights, and get AI-powered recommendations.
           </p>
         </motion.div>
@@ -305,18 +305,18 @@ export default function RepositorySelection() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="glass-card p-4 mb-8 border-red-200"
+            className="glass-card p-4 mb-8 border-red-500/30"
           >
             <div className="flex items-center space-x-3">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-red-800">{error}</p>
+                <p className="text-red-300">{error}</p>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => loadRepositories()}
-                className="text-red-600 hover:text-red-800"
+                className="text-red-400 hover:text-red-300"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Retry
@@ -329,7 +329,7 @@ export default function RepositorySelection() {
         {loading ? (
           <div className="text-center py-12">
             <Loader2 className="w-8 h-8 text-nehua-primary animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading your repositories...</p>
+            <p className="text-gray-400">Loading your repositories...</p>
           </div>
         ) : (
           <>
@@ -361,12 +361,12 @@ export default function RepositorySelection() {
                 animate={{ opacity: 1 }}
                 className="text-center py-12"
               >
-                <Github className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <Github className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-white mb-2">
                   No repositories found
                 </h3>
-                <p className="text-gray-600">
-                  {repositories.length === 0 
+                <p className="text-gray-400">
+                  {repositories.length === 0
                     ? "You don't have any public repositories yet."
                     : "Try adjusting your search or filter criteria."
                   }
@@ -440,8 +440,8 @@ export default function RepositorySelection() {
             <div className="flex items-center space-x-3">
               <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
               <div className="flex-1">
-                <p className="font-medium text-gray-900">Repository Selected</p>
-                <p className="text-sm text-gray-600">{selectedRepo.name}</p>
+                <p className="font-medium text-white">Repository Selected</p>
+                <p className="text-sm text-gray-400">{selectedRepo.name}</p>
               </div>
             </div>
           </motion.div>

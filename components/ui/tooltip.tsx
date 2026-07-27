@@ -20,8 +20,8 @@ const TooltipContent = React.forwardRef<
   TooltipContentProps
 >(({ className, sideOffset = 4, variant = 'glass', children, ...props }, ref) => {
   const variantStyles = {
-    default: 'bg-white border border-gray-200 text-gray-900 shadow-lg',
-    glass: 'glass-panel border-white/20 text-gray-800 shadow-2xl',
+    default: 'bg-slate-900 border border-white/10 text-white shadow-lg',
+    glass: 'glass-panel border-white/20 text-gray-100 shadow-2xl',
     dark: 'bg-gray-900 border border-gray-800 text-white shadow-xl'
   }
 

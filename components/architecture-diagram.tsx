@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import ReactFlow, {
   Node,
   Edge,
@@ -17,6 +17,13 @@ import ReactFlow, {
   BackgroundVariant,
   ConnectionMode
 } from 'reactflow'
+// React Flow's own required base stylesheet. Without this, .react-flow__node
+// never actually gets position:absolute/transform-origin/pointer-events from
+// the library's own CSS - nodes fall back to normal document flow (full
+// width, stacking top-to-bottom) with only a cosmetic transform on top,
+// which is exactly the full-width overlap this app has been showing.
+import 'reactflow/dist/style.css'
+import dagre from 'dagre'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArchitectureNode } from './architecture-node'
 import { CustomEdge, edgeTypes } from './custom-edge'
@@ -37,7 +44,6 @@ import { Button } from './ui/button'
 interface ArchitectureDiagramProps {
   analysisResult: AnalysisResult
   onNodeSelect?: (node: NodeType) => void
-  onNodeExplain?: (node: NodeType) => void
 }
 
 // Node types configuration for React Flow
@@ -45,12 +51,61 @@ const nodeTypes = {
   architectureNode: ArchitectureNode,
 }
 
-function ArchitectureDiagramContent({ 
-  analysisResult, 
-  onNodeSelect, 
-  onNodeExplain 
+// Node card size - must match the fixed w-[240px] h-[170px] card size in
+// architecture-node.tsx exactly, otherwise dagre reserves the wrong amount
+// of space per node and rows end up overlapping.
+const NODE_WIDTH = 240
+const NODE_HEIGHT = 170
+
+// Computes a layered, non-overlapping layout from the graph structure
+// instead of trusting each analyzer's ad-hoc (sometimes random) positions.
+function computeLayout(
+  nodes: NodeType[],
+  edges: ArchitectureEdge[]
+): Record<string, { x: number; y: number }> {
+  const graph = new dagre.graphlib.Graph()
+  graph.setDefaultEdgeLabel(() => ({}))
+  graph.setGraph({ rankdir: 'TB', nodesep: 80, ranksep: 120, marginx: 40, marginy: 40 })
+
+  nodes.forEach((node) => {
+    graph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT })
+  })
+
+  edges.forEach((edge) => {
+    if (graph.hasNode(edge.source) && graph.hasNode(edge.target)) {
+      graph.setEdge(edge.source, edge.target)
+    }
+  })
+
+  dagre.layout(graph)
+
+  const positions: Record<string, { x: number; y: number }> = {}
+  nodes.forEach((node) => {
+    const position = graph.node(node.id)
+    if (position) {
+      positions[node.id] = {
+        x: position.x - NODE_WIDTH / 2,
+        y: position.y - NODE_HEIGHT / 2
+      }
+    }
+  })
+
+  return positions
+}
+
+function ArchitectureDiagramContent({
+  analysisResult,
+  onNodeSelect
 }: ArchitectureDiagramProps) {
   const reactFlow = useReactFlow()
+  // Pin these to the object identity from this component instance's first
+  // render. nodeTypes/edgeTypes are already module-level constants (not
+  // recreated per render), but Fast Refresh re-evaluating this module on a
+  // hot-reload can otherwise make an already-mounted instance briefly see a
+  // "new" object and log React Flow's error #002 - useMemo with an empty
+  // dependency array keeps the reference stable across that regardless.
+  const stableNodeTypes = useMemo(() => nodeTypes, [])
+  const stableEdgeTypes = useMemo(() => edgeTypes, [])
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
@@ -63,19 +118,20 @@ function ArchitectureDiagramContent({
   useEffect(() => {
     if (!analysisResult.nodes || !analysisResult.edges) return
 
+    const layoutPositions = computeLayout(analysisResult.nodes, analysisResult.edges)
+
     // Convert nodes
     const flowNodes: Node[] = analysisResult.nodes.map((node) => ({
       id: node.id,
       type: 'architectureNode',
-      position: node.position,
+      position: layoutPositions[node.id] || node.position,
       data: {
         ...node.data,
         label: node.label,
         type: node.type,
         description: node.description,
         selected: node.id === selectedNodeId,
-        onSelect: () => handleNodeSelect(node),
-        onExplain: () => handleNodeExplain(node)
+        onSelect: () => handleNodeSelect(node)
       },
       style: {
         backgroundColor: 'transparent',
@@ -136,13 +192,6 @@ function ArchitectureDiagramContent({
     }
   }, [selectedNodeId, analysisResult.edges, onNodeSelect])
 
-  const handleNodeExplain = useCallback((node: NodeType) => {
-    console.log('Explaining node:', node.label)
-    if (onNodeExplain) {
-      onNodeExplain(node)
-    }
-  }, [onNodeExplain])
-
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
@@ -169,7 +218,7 @@ function ArchitectureDiagramContent({
   }, [])
 
   return (
-    <div className="relative w-full h-full bg-white rounded-2xl overflow-hidden border border-gray-200">
+    <div className="relative w-full h-full bg-slate-950 rounded-2xl overflow-hidden border border-white/10">
       {/* React Flow */}
       <ReactFlow
         nodes={nodes}
@@ -178,37 +227,38 @@ function ArchitectureDiagramContent({
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onPaneClick={handlePaneClick}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
+        nodeTypes={stableNodeTypes}
+        edgeTypes={stableEdgeTypes}
         connectionMode={ConnectionMode.Loose}
         fitView
         attributionPosition="bottom-left"
-        className="bg-white"
+        className="bg-slate-950"
       >
         {/* Background */}
         {showBackground && (
-          <Background 
+          <Background
             variant={BackgroundVariant.Dots}
             gap={20}
             size={1}
-            color="#e5e7eb"
+            color="#334155"
           />
         )}
 
         {/* Controls */}
-        <Controls 
+        <Controls
           position="top-left"
           showZoom={false}
           showFitView={false}
           showInteractive={false}
-          className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg shadow-lg"
+          className="bg-slate-900/80 backdrop-blur-sm border border-white/10 rounded-lg shadow-lg"
         />
 
         {/* MiniMap */}
         {showMiniMap && (
           <MiniMap
             position="bottom-right"
-            className="bg-white/90 border border-gray-200 rounded-lg shadow-lg"
+            className="bg-slate-900/90 border border-white/10 rounded-lg shadow-lg"
+            maskColor="rgba(2, 6, 23, 0.7)"
             nodeColor={(node) => {
               const nodeData = analysisResult.nodes.find(n => n.id === node.id)
               return nodeData?.style?.backgroundColor || '#6B7280'
@@ -298,22 +348,22 @@ function ArchitectureDiagramContent({
           className="absolute bottom-4 left-4 glass-card p-4 max-w-sm z-10"
         >
           <div className="flex items-start justify-between mb-2">
-            <h3 className="font-semibold text-gray-900">Selected Component</h3>
-            <button 
+            <h3 className="font-semibold text-white">Selected Component</h3>
+            <button
               onClick={() => setSelectedNodeId(null)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-500 hover:text-gray-300"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
-          
+
           {(() => {
             const selectedNode = analysisResult.nodes.find(n => n.id === selectedNodeId)
             return selectedNode ? (
               <div className="text-sm space-y-2">
                 <p className="font-medium text-nehua-primary">{selectedNode.label}</p>
-                <p className="text-gray-600 text-xs">{selectedNode.description}</p>
-                <div className="flex items-center space-x-4 text-xs text-gray-500">
+                <p className="text-gray-300 text-xs">{selectedNode.description}</p>
+                <div className="flex items-center space-x-4 text-xs text-gray-400">
                   <span>Connections: {highlightedPath.length}</span>
                   {selectedNode.data.files && (
                     <span>Files: {selectedNode.data.files.length}</span>
@@ -343,20 +393,20 @@ function ArchitectureDiagramContent({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-white">
                   Architecture Diagram Guide
                 </h3>
                 <button
                   onClick={() => setIsInfoOpen(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-500 hover:text-gray-300"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="space-y-3 text-sm text-gray-600">
+              <div className="space-y-3 text-sm text-gray-300">
                 <div>
-                  <p className="font-medium text-gray-900 mb-1">Interactions:</p>
+                  <p className="font-medium text-white mb-1">Interactions:</p>
                   <ul className="list-disc list-inside space-y-1 text-xs">
                     <li>Click nodes to select and highlight connections</li>
                     <li>Use "Explain Component" for detailed AI analysis</li>
@@ -366,7 +416,7 @@ function ArchitectureDiagramContent({
                 </div>
 
                 <div>
-                  <p className="font-medium text-gray-900 mb-1">Edge Types:</p>
+                  <p className="font-medium text-white mb-1">Edge Types:</p>
                   <ul className="list-disc list-inside space-y-1 text-xs">
                     <li><span className="text-nehua-primary">Pink:</span> Dependencies</li>
                     <li><span className="text-nehua-secondary">Cyan:</span> API Calls</li>
@@ -375,7 +425,7 @@ function ArchitectureDiagramContent({
                 </div>
 
                 <div>
-                  <p className="font-medium text-gray-900 mb-1">Components analyzed:</p>
+                  <p className="font-medium text-white mb-1">Components analyzed:</p>
                   <p className="text-xs">{analysisResult.nodes.length} nodes, {analysisResult.edges.length} connections</p>
                 </div>
               </div>

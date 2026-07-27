@@ -22,6 +22,7 @@
     "@tailwindcss/forms": "^0.5.7",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
+    "dagre": "^0.8.5",
     "framer-motion": "^10.16.0",
     "gray-matter": "^4.0.3",
     "jspdf": "^2.5.2",
@@ -36,6 +37,7 @@
     "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {
+    "@types/dagre": "^0.7.52",
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",

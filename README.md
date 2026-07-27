@@ -1,3 +1,4 @@
+
 # 🏗️ Nehua - Autonomous Software Architecture Agent
 
 ![Nehua Banner](https://img.shields.io/badge/Hackathon-24h%20MVP-FA0080?style=for-the-badge)
@@ -70,7 +71,7 @@ NEXTAUTH_SECRET=your-secret-here
 GITHUB_ID=your-github-oauth-app-id
 GITHUB_SECRET=your-github-oauth-app-secret
 GEMINI_API_KEY=your-gemini-api-key
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 3. **GitHub OAuth Setup**

@@ -29,12 +29,12 @@ export function DemoProgress({ className = '' }: DemoProgressProps) {
   return (
     <div className={`glass-panel p-4 ${className}`}>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-900">Demo Progress</h3>
-        <span className="text-xs text-gray-600">{percentage}% Complete</span>
+        <h3 className="text-sm font-semibold text-white">Demo Progress</h3>
+        <span className="text-xs text-gray-400">{percentage}% Complete</span>
       </div>
 
       {/* Progress bar */}
-      <div className="w-full bg-gray-200 rounded-full h-2 mb-4 overflow-hidden">
+      <div className="w-full bg-white/10 rounded-full h-2 mb-4 overflow-hidden">
         <motion.div
           className="h-full bg-gradient-to-r from-nehua-primary to-nehua-secondary rounded-full"
           initial={{ width: 0 }}
@@ -57,7 +57,7 @@ export function DemoProgress({ className = '' }: DemoProgressProps) {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
               className={`flex items-center space-x-3 p-2 rounded-lg transition-colors ${
-                isCurrent ? 'bg-nehua-primary/10' : 'hover:bg-gray-50'
+                isCurrent ? 'bg-nehua-primary/10' : 'hover:bg-white/5'
               }`}
             >
               <div className="flex-shrink-0">
@@ -71,28 +71,28 @@ export function DemoProgress({ className = '' }: DemoProgressProps) {
                     <Circle className="w-5 h-5 text-nehua-primary fill-current" />
                   </motion.div>
                 ) : (
-                  <Circle className="w-5 h-5 text-gray-300" />
+                  <Circle className="w-5 h-5 text-gray-600" />
                 )}
               </div>
 
               <div className="flex-1 min-w-0">
                 <p className={`text-sm font-medium ${
-                  isCompleted ? 'text-green-600' :
+                  isCompleted ? 'text-green-500' :
                   isCurrent ? 'text-nehua-primary' :
-                  'text-gray-400'
+                  'text-gray-500'
                 }`}>
                   {step.label}
                 </p>
                 {isCurrent && (
-                  <p className="text-xs text-gray-600">In Progress</p>
+                  <p className="text-xs text-gray-400">In Progress</p>
                 )}
                 {isCompleted && (
-                  <p className="text-xs text-green-600">Completed</p>
+                  <p className="text-xs text-green-500">Completed</p>
                 )}
               </div>
 
               {(isCompleted || isCurrent) && index < steps.length - 1 && (
-                <ArrowRight className="w-4 h-4 text-gray-400" />
+                <ArrowRight className="w-4 h-4 text-gray-500" />
               )}
             </motion.div>
           )
@@ -100,8 +100,8 @@ export function DemoProgress({ className = '' }: DemoProgressProps) {
       </div>
 
       {/* Demo info */}
-      <div className="mt-4 pt-3 border-t border-gray-200">
-        <p className="text-xs text-gray-600 text-center">
+      <div className="mt-4 pt-3 border-t border-white/10">
+        <p className="text-xs text-gray-400 text-center">
           🏗️ Nehua Architecture Analysis Demo
         </p>
         <p className="text-xs text-gray-500 text-center mt-1">

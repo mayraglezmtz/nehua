@@ -52,12 +52,12 @@
     },
     "cache": {
       "icon": "zap",
-      "color": "#A59837",
+      "color": "#FB923C",
       "description": "Caching layer for performance optimization"
     },
     "queue": {
       "icon": "list",
-      "color": "#7A3D5D",
+      "color": "#A855F7",
       "description": "Message queues and async task processing"
     },
     "storage": {
@@ -67,17 +67,17 @@
     },
     "authentication": {
       "icon": "lock",
-      "color": "#FA0080",
+      "color": "#7A3D5D",
       "description": "Authentication and authorization services"
     },
     "cloud_service": {
       "icon": "cloud",
-      "color": "#00DDFA",
+      "color": "#38BDF8",
       "description": "External cloud services and APIs"
     },
     "ai_service": {
       "icon": "brain",
-      "color": "#FADD00",
+      "color": "#10B981",
       "description": "AI/ML services and providers"
     },
     "external_api": {
@@ -87,12 +87,12 @@
     },
     "infrastructure": {
       "icon": "layers",
-      "color": "#7A3D5D", 
+      "color": "#64748B",
       "description": "Infrastructure and deployment configuration"
     },
     "monitoring": {
       "icon": "activity",
-      "color": "#3D737A",
+      "color": "#F43F5E",
       "description": "Monitoring, logging, and observability"
     }
   },
@@ -157,13 +157,12 @@
   },
   "llm": {
     "provider": "gemini",
-    "model": "gemini-2.0-flash",
+    "model": "gemini-2.5-flash",
     "max_tokens": 4096,
     "temperature": 0.3,
     "prompts": {
       "architecture_analysis": "You are a senior software architect analyzing a codebase. Provide a clear, basic-to-intermediate level explanation of the architecture, identify main components, their relationships, and overall design patterns. Be friendly but professional.",
       "risk_assessment": "Analyze this codebase for potential risks including security vulnerabilities, performance bottlenecks, maintainability issues, scalability concerns, and technical debt. Provide actionable insights in a friendly but professional tone.",
-      "component_explanation": "Explain the purpose and functionality of this code component in basic-to-intermediate detail. Focus on what it does, how it fits into the overall architecture, and its key responsibilities. Keep the tone friendly but professional.",
       "health_score_reasoning": "Evaluate this codebase across four dimensions: dependencies (25%), architecture (25%), code quality (25%), and performance (25%). Provide a score from 0-100 and justify your reasoning in a friendly, professional manner."
     }
   }

@@ -18,13 +18,19 @@ export interface GeminiResponse {
 }
 
 export class GeminiService {
+  // Backup models tried, in order, if the configured model 429s (quota
+  // varies per-account and per-model-generation on Google's side - the
+  // gemini-2.0-* family being fully quota-exhausted on an otherwise-valid
+  // key is exactly the failure this list exists to route around).
+  private static readonly FALLBACK_MODELS = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash-lite']
+
   private baseUrl = 'https://generativelanguage.googleapis.com/v1beta'
   private apiKey?: string
   private model: string
 
   constructor() {
     this.apiKey = process.env.GEMINI_API_KEY
-    this.model = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
+    this.model = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
   }
 
   async makeRequest(request: GeminiRequest): Promise<GeminiResponse> {
@@ -35,71 +41,92 @@ export class GeminiService {
       }
     }
 
-    try {
-      console.log('Making Gemini request:', {
-        model: this.model,
-        prompt: request.prompt.substring(0, 100) + '...',
-        temperature: request.temperature,
-        max_tokens: request.max_tokens
-      })
+    const modelsToTry = [this.model, ...GeminiService.FALLBACK_MODELS.filter(m => m !== this.model)]
+    let lastError = 'Unknown error'
 
-      const response = await fetch(
-        `${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: request.prompt }] }],
-            generationConfig: {
-              temperature: request.temperature ?? 0.3,
-              maxOutputTokens: request.max_tokens ?? 4096,
-            }
-          })
+    for (const model of modelsToTry) {
+      try {
+        console.log('Making Gemini request:', {
+          model,
+          prompt: request.prompt.substring(0, 100) + '...',
+          temperature: request.temperature,
+          max_tokens: request.max_tokens
+        })
+
+        const response = await fetch(
+          `${this.baseUrl}/models/${model}:generateContent?key=${this.apiKey}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: request.prompt }] }],
+              generationConfig: {
+                temperature: request.temperature ?? 0.3,
+                maxOutputTokens: request.max_tokens ?? 4096,
+                // Every prompt in this service asks for a JSON response.
+                // Forcing native JSON output mode (constrained decoding)
+                // instead of parsing free-form/markdown-fenced text avoids
+                // the "almost valid JSON" syntax errors that come with
+                // asking the model to format its own JSON as prose.
+                responseMimeType: 'application/json',
+              }
+            })
+          }
+        )
+
+        if (response.status === 429) {
+          // This model's quota is exhausted - try the next candidate
+          // instead of failing the whole request.
+          lastError = `Gemini API error: 429 - quota exceeded for model ${model}`
+          console.warn(lastError)
+          continue
         }
-      )
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
-      }
-
-      const data = await response.json()
-      const text = data.candidates?.[0]?.content?.parts
-        ?.map((part: any) => part.text || '')
-        .join('') || ''
-
-      if (!text) {
-        throw new Error('Gemini returned an empty response')
-      }
-
-      const usageMetadata = data.usageMetadata
-
-      console.log('Gemini response received:', {
-        success: true,
-        usage: usageMetadata
-      })
-
-      return {
-        success: true,
-        data: {
-          response: text,
-          usage: usageMetadata ? {
-            prompt_tokens: usageMetadata.promptTokenCount,
-            completion_tokens: usageMetadata.candidatesTokenCount,
-            total_tokens: usageMetadata.totalTokenCount
-          } : undefined
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
         }
-      }
 
-    } catch (error) {
-      console.error('Gemini request failed:', error)
+        const data = await response.json()
+        const text = data.candidates?.[0]?.content?.parts
+          ?.map((part: any) => part.text || '')
+          .join('') || ''
 
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        if (!text) {
+          throw new Error('Gemini returned an empty response')
+        }
+
+        const usageMetadata = data.usageMetadata
+
+        console.log('Gemini response received:', {
+          success: true,
+          model,
+          usage: usageMetadata
+        })
+
+        return {
+          success: true,
+          data: {
+            response: text,
+            usage: usageMetadata ? {
+              prompt_tokens: usageMetadata.promptTokenCount,
+              completion_tokens: usageMetadata.candidatesTokenCount,
+              total_tokens: usageMetadata.totalTokenCount
+            } : undefined
+          }
+        }
+
+      } catch (error) {
+        lastError = error instanceof Error ? error.message : 'Unknown error'
+        console.error(`Gemini request failed for model ${model}:`, error)
       }
+    }
+
+    return {
+      success: false,
+      error: lastError
     }
   }
 
@@ -221,31 +248,6 @@ export class GeminiService {
     return this.parseRecommendationsResponse(response.data.response)
   }
 
-  async explainComponent(
-    componentInfo: any,
-    contextInfo: any,
-    config: any
-  ): Promise<{
-    explanation: string
-    purpose: string
-    relationships: string[]
-    technical_details: string
-  }> {
-    const prompt = this.buildComponentExplanationPrompt(componentInfo, contextInfo, config)
-
-    const response = await this.makeRequest({
-      prompt,
-      temperature: 0.3,
-      max_tokens: 1500
-    })
-
-    if (!response.success || !response.data) {
-      throw new Error(`Component explanation failed: ${response.error}`)
-    }
-
-    return this.parseComponentResponse(response.data.response)
-  }
-
   // Prompt building methods
   private buildArchitectureAnalysisPrompt(
     repositoryInfo: any,
@@ -357,30 +359,6 @@ Generate actionable recommendations to improve this codebase. Focus on:
 Format as JSON array with: category, priority, title, description, implementation, estimated_effort`
   }
 
-  private buildComponentExplanationPrompt(
-    componentInfo: any,
-    contextInfo: any,
-    config: any
-  ): string {
-    return `${config.llm.prompts.component_explanation}
-
-Component: ${componentInfo.label}
-Type: ${componentInfo.type}
-Files: ${componentInfo.data?.files?.join(', ') || 'None'}
-Dependencies: ${componentInfo.data?.dependencies?.join(', ') || 'None'}
-
-Repository Context: ${contextInfo.repository?.full_name}
-Framework: ${contextInfo.framework}
-
-Please explain this component in basic-to-intermediate detail:
-1. What this component does and its primary purpose
-2. How it fits into the overall application architecture
-3. Key responsibilities and functionality
-4. Relationships with other components
-
-Format as JSON: explanation, purpose, relationships (array), technical_details`
-  }
-
   // Response parsing methods
   private parseArchitectureResponse(response: string): any {
     try {
@@ -471,28 +449,6 @@ Format as JSON: explanation, purpose, relationships (array), technical_details`
     }
   }
 
-  private parseComponentResponse(response: string): any {
-    try {
-      const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/) || response.match(/{[\s\S]*}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[1] || jsonMatch[0]);
-      }
-
-      return {
-        explanation: response.substring(0, 400),
-        purpose: 'Component analysis completed',
-        relationships: [],
-        technical_details: 'See explanation for details'
-      };
-    } catch (error) {
-      return {
-        explanation: 'Component analysis completed but could not parse response',
-        purpose: 'Analysis completed',
-        relationships: [],
-        technical_details: 'Response parsing failed'
-      };
-    }
-  }
 }
 
 // Export singleton instance
